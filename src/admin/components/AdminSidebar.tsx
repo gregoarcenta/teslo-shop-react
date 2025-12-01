@@ -12,6 +12,7 @@ import {
   ChevronRight
 } from "lucide-react";
 import { Link, useLocation } from "react-router";
+import CustomLogo from "@/components/custom/CustomLogo";
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -46,9 +47,7 @@ const AdminSidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggle }) => {
     >
       {/* Header */}
       <div className="p-4 py-[19px] border-b border-gray-200 flex items-center justify-between">
-        {!isCollapsed && (
-          <h1 className="text-xl font-bold text-gray-800">AdminPro</h1>
-        )}
+        {!isCollapsed && <CustomLogo to="/admin" />}
         <button
           onClick={onToggle}
           className="p-2 rounded-lg hover:bg-gray-100 transition-colors"

@@ -1,4 +1,4 @@
-import AdminTitle from "@/admin/components/AdminTitle";
+import { AdminTitle } from "@/admin/components/AdminTitle";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -20,17 +20,18 @@ export const AdminProductsPage = () => {
           title="Productos"
           subtitle="Aquí puedes ver y administrar tus productos."
         />
-
-        <Link to={"/admin/products/new"}>
-          <Button variant={"default"}>
-            <PlusIcon />
-            Nuevo Producto
-          </Button>
-        </Link>
+        <div className="flex justify-end gap-4">
+          <Link to={"/admin/products/new"}>
+            <Button variant={"default"}>
+              <PlusIcon />
+              Nuevo Producto
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Porducts table */}
-      <Table className="bg-white mb-10 shadow-xs border border-gray-200">
+      <Table className="bg-white mb-10 shadow-xs rounded-xl border border-gray-200">
         <TableHeader>
           <TableRow>
             <TableHead className="w-[100px] p-6">ID</TableHead>

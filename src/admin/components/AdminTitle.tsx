@@ -3,7 +3,7 @@ interface Props {
   subtitle: string;
 }
 
-const AdminTitle = ({ title, subtitle }: Props) => {
+export const AdminTitle = ({ title, subtitle }: Props) => {
   return (
     <div className="mb-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
@@ -11,5 +11,3 @@ const AdminTitle = ({ title, subtitle }: Props) => {
     </div>
   );
 };
-
-export default AdminTitle;
