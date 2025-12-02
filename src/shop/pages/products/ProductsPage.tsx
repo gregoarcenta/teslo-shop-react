@@ -22,6 +22,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { CustomPagination } from "@/components/custom/CustomPagination";
 
 // Mock data - this will be replaced with real data from database
 const mockProducts = [
@@ -470,6 +471,8 @@ export const ProductsPage = () => {
               onAction={hasActiveFilters ? handleClearFilters : undefined}
             />
           )}
+
+          <CustomPagination totalPages={6} />
         </div>
       </div>
     </div>
