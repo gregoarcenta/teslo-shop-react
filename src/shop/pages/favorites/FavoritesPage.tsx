@@ -3,7 +3,7 @@ import { Heart } from "lucide-react";
 import hoodieGray from "@/assets/tesla-hoodie-gray.jpg";
 import { EmptyState } from "@/components/custom/EmptyState";
 import { CustomProductCard } from "@/shop/components/CustomProductCart";
-import { CustomProductGridSkeleton } from "@/shop/components/CustomproductGridSkeleton";
+import { CustomProductGridSkeleton } from "@/shop/components/CustomProductGridSkeleton";
 
 // Mock favorites
 const mockFavorites = [

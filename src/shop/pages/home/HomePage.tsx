@@ -43,7 +43,7 @@ export const HomePage = () => {
         {/* Hero Content */}
         <div className="relative container mx-auto px-4 h-full flex items-center">
           <div className="max-w-2xl space-y-6 animate-fade-in-up">
-            <h1 className="text-5xl md:text-7xl font-bold leading-tight text-white drop-shadow-lg">
+            <h1 className="text-5xl md:text-7xl font-bold leading-tight text-white drop-shadow-lg font-montserrat">
               Descubre tu{" "}
               <span className="bg-linear-to-r from-primary to-primary-glow bg-clip-text text-transparent">
                 Estilo Único

@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, Activity } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -92,20 +92,20 @@ const mockProducts = [
 export const CustomHeader = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [user, setUser] = useState<null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [user, setUser] = useState<null>(null);
+
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
+
   //   const { canAccessAdmin } = useUserRole(user);
   const canAccessAdmin = true;
-  const handleLogout = async () => {
-    navigate("/");
-  };
 
   const isActive = (path: string) => location.pathname === path;
+  const isSearchOpen = searchQuery.trim().length > 0;
 
   // Productos sugeridos para autocompletado (máximo 5)
   const suggestedProducts = useMemo(() => {
@@ -128,7 +128,6 @@ export const CustomHeader = () => {
   const handleSearch = () => {
     if (searchQuery.trim()) {
       navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
-      setIsSearchOpen(false);
       setSearchQuery("");
       // Quitar foco del input
       desktopSearchRef.current?.blur();
@@ -139,7 +138,6 @@ export const CustomHeader = () => {
 
   const handleProductSelect = (productId: string) => {
     navigate(`/product/${productId}`);
-    setIsSearchOpen(false);
     setSearchQuery("");
     // Quitar foco del input
     desktopSearchRef.current?.blur();
@@ -148,13 +146,6 @@ export const CustomHeader = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!isSearchOpen) {
-      if (e.key === "Enter") {
-        handleSearch();
-      }
-      return;
-    }
-
     // Total de items = productos sugeridos + 1 opción de búsqueda general
     const totalItems = suggestedProducts.length + 1;
 
@@ -179,9 +170,14 @@ export const CustomHeader = () => {
         }
         break;
       case "Escape":
-        setIsSearchOpen(false);
+        e.preventDefault();
+        setSearchQuery("");
         break;
     }
+  };
+
+  const handleLogout = async () => {
+    navigate("/");
   };
 
   return (
@@ -236,20 +232,12 @@ export const CustomHeader = () => {
                 ref={desktopSearchRef}
                 placeholder="Buscar productos..."
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(e.target.value.trim().length > 0);
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                onFocus={() => {
-                  if (searchQuery.trim().length > 0) {
-                    setIsSearchOpen(true);
-                  }
-                }}
                 className="pl-10 bg-secondary/50 border-0"
               />
             </div>
-            {isSearchOpen && searchQuery.trim().length > 0 && (
+            <Activity mode={isSearchOpen ? "visible" : "hidden"}>
               <div className="absolute top-full mt-2 w-full bg-popover border border-border rounded-md shadow-lg z-50">
                 <div className="p-2">
                   {suggestedProducts.length > 0 && (
@@ -336,7 +324,7 @@ export const CustomHeader = () => {
                   </button>
                 </div>
               </div>
-            )}
+            </Activity>
           </div>
 
           {/* Actions */}
@@ -449,7 +437,7 @@ export const CustomHeader = () => {
         </div>
 
         {/* Mobile Menu */}
-        {isMenuOpen && (
+        <Activity mode={isMenuOpen ? "visible" : "hidden"}>
           <div className="md:hidden pb-4 space-y-3 animate-fade-in">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
@@ -457,21 +445,8 @@ export const CustomHeader = () => {
                 ref={mobileSearchRef}
                 placeholder="Buscar productos..."
                 value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(e.target.value.trim().length > 0);
-                }}
-                onKeyDown={(e) => {
-                  handleKeyDown(e);
-                  if (e.key === "Enter" && !isSearchOpen) {
-                    setIsMenuOpen(false);
-                  }
-                }}
-                onFocus={() => {
-                  if (searchQuery.trim().length > 0) {
-                    setIsSearchOpen(true);
-                  }
-                }}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => handleKeyDown(e)}
                 className="pl-10 bg-secondary/50 border-0"
               />
               {isSearchOpen && searchQuery.trim().length > 0 && (
@@ -569,6 +544,7 @@ export const CustomHeader = () => {
                 </div>
               )}
             </div>
+
             <Link
               to="/products"
               className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
@@ -597,7 +573,8 @@ export const CustomHeader = () => {
             >
               Niños
             </Link>
-            {canAccessAdmin && (
+
+            <Activity mode={canAccessAdmin ? "hidden" : "visible"}>
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-md mt-2 ${
@@ -610,9 +587,9 @@ export const CustomHeader = () => {
                 <Shield className="h-4 w-4" />
                 Panel de Admin
               </Link>
-            )}
+            </Activity>
           </div>
-        )}
+        </Activity>
       </div>
     </nav>
   );

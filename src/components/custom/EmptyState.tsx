@@ -20,7 +20,7 @@ export const EmptyState = ({
   onAction
 }: EmptyStateProps) => {
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-4 animate-fade-in">
+    <div className="flex flex-col items-center justify-center py-20 px-4">
       <div
         className="bg-muted/50 rounded-full p-6 mb-6 animate-scale-in"
         style={{ animationDelay: "0.1s" }}
