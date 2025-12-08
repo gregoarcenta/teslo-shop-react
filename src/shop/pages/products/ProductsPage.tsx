@@ -154,11 +154,12 @@ export const ProductsPage = () => {
             onToggleFilters={() => setShowFilters(!showFilters)}
           />
 
-          {/* Products Grid */}
+          {/* Loading skeleton */}
           <Activity mode={isLoading ? "visible" : "hidden"}>
             <CustomProductGridSkeleton count={6} />
           </Activity>
 
+          {/* Empty State */}
           <Activity
             mode={
               !isLoading && filteredProducts.length === 0 ? "visible" : "hidden"
@@ -179,6 +180,7 @@ export const ProductsPage = () => {
             />
           </Activity>
 
+          {/* Products Grid */}
           <Activity
             mode={
               !isLoading && filteredProducts.length > 0 ? "visible" : "hidden"
