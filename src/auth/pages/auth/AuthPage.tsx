@@ -14,36 +14,41 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 
 import { toast } from "sonner";
+import { loginAction } from "@/auth/actions/login.action";
+import { useMutation } from "@tanstack/react-query";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 export const AuthPage = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const onLogin = useAuthStore((state) => state.login);
+
+  const loginMutation = useMutation({
+    mutationFn: loginAction,
+    onSuccess: (data) => {
+      onLogin(data.user);
+      localStorage.setItem("token", data.accessToken);
+      toast.success("¡Inicio de sesión exitoso!");
+      navigate("/");
+    },
+    onError: (_) => toast.error("Correo o contraseña incorrectos")
+  });
+
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    const error = true;
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    console.log("fdsak");
-
-    if (error) {
-      // toast("Event has been created.");
-      toast.error("Creedenciales incorrectas");
-    } else {
-      // toast("Event has been created.");
-      toast.error("¡Inicio de sesión exitoso!");
-    }
-
-    setIsLoading(false);
+    loginMutation.mutate({ email, password });
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
     const error = false;
 
@@ -52,18 +57,13 @@ export const AuthPage = () => {
     } else {
       toast.success("¡Cuenta creada exitosamente!");
     }
-
-    setIsLoading(false);
   };
 
   const handleGoogleLogin = async () => {
-    setIsLoading(true);
-
-    const error = false;
+    const error = true;
 
     if (error) {
       toast.error("Error en el login con google");
-      setIsLoading(false);
     }
   };
 
@@ -93,6 +93,7 @@ export const AuthPage = () => {
                 <TabsTrigger value="signup">Registrarse</TabsTrigger>
               </TabsList>
 
+              {/* login */}
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
@@ -100,6 +101,7 @@ export const AuthPage = () => {
                     <Input
                       id="email"
                       type="email"
+                      name="email"
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -110,6 +112,7 @@ export const AuthPage = () => {
                     <Label htmlFor="password">Contraseña</Label>
                     <Input
                       id="password"
+                      name="password"
                       type="password"
                       placeholder="••••••••"
                       value={password}
@@ -120,9 +123,11 @@ export const AuthPage = () => {
                   <Button
                     type="submit"
                     className="w-full gradient-hero shadow-soft"
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
                   >
-                    {isLoading ? "Iniciando..." : "Iniciar Sesión"}
+                    {loginMutation.isPending
+                      ? "Iniciando..."
+                      : "Iniciar Sesión"}
                   </Button>
 
                   <div className="relative">
@@ -141,7 +146,7 @@ export const AuthPage = () => {
                     variant="outline"
                     className="w-full"
                     onClick={handleGoogleLogin}
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
                   >
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                       <path
@@ -166,6 +171,7 @@ export const AuthPage = () => {
                 </form>
               </TabsContent>
 
+              {/* register */}
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
@@ -201,13 +207,13 @@ export const AuthPage = () => {
                       required
                     />
                   </div>
-                  <Button
+                  {/* <Button
                     type="submit"
                     className="w-full gradient-hero shadow-soft"
                     disabled={isLoading}
                   >
                     {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
-                  </Button>
+                  </Button> */}
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -220,7 +226,7 @@ export const AuthPage = () => {
                     </div>
                   </div>
 
-                  <Button
+                  {/* <Button
                     type="button"
                     variant="outline"
                     className="w-full"
@@ -246,7 +252,7 @@ export const AuthPage = () => {
                       />
                     </svg>
                     Google
-                  </Button>
+                  </Button> */}
                 </form>
               </TabsContent>
             </Tabs>

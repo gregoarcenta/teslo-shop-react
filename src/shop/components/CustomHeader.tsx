@@ -30,6 +30,7 @@ import sweatshirtNavy from "@/assets/tesla-sweatshirt-navy.jpg";
 import longsleeveCharcoal from "@/assets/tesla-longsleeve-charcoal.jpg";
 import { Link, useLocation, useNavigate } from "react-router";
 import CustomLogo from "@/components/custom/CustomLogo";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 // Mock data - same as in Products page
 const mockProducts = [
@@ -96,16 +97,21 @@ export const CustomHeader = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [user, setUser] = useState<null>(null);
+
+  const user = useAuthStore((state) => state.user);
+  const onLogout = useAuthStore((state) => state.logout);
 
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
-  //   const { canAccessAdmin } = useUserRole(user);
-  const canAccessAdmin = true;
-
   const isActive = (path: string) => location.pathname === path;
   const isSearchOpen = searchQuery.trim().length > 0;
+
+  const isAdminAccess = () => {
+    return (
+      user?.roles.includes("admin") || user?.roles.includes("test") || false
+    );
+  };
 
   // Productos sugeridos para autocompletado (máximo 5)
   const suggestedProducts = useMemo(() => {
@@ -179,6 +185,8 @@ export const CustomHeader = () => {
   };
 
   const handleLogout = async () => {
+    onLogout();
+    localStorage.removeItem("token");
     navigate("/");
   };
 
@@ -331,7 +339,8 @@ export const CustomHeader = () => {
 
           {/* Actions */}
           <div className="flex items-center space-x-2">
-            {canAccessAdmin && (
+            {/* admin botom */}
+            <Activity mode={isAdminAccess() ? "visible" : "hidden"}>
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-1.5 rounded-md ${
@@ -343,8 +352,9 @@ export const CustomHeader = () => {
                 <Shield className="h-4 w-4" />
                 Admin
               </Link>
-            )}
+            </Activity>
 
+            {/* favorites button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -363,6 +373,7 @@ export const CustomHeader = () => {
               </TooltipContent>
             </Tooltip>
 
+            {/* cart button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" asChild>
@@ -376,7 +387,8 @@ export const CustomHeader = () => {
               </TooltipContent>
             </Tooltip>
 
-            {user ? (
+            {/* user account button */}
+            <Activity mode={user ? "visible" : "hidden"}>
               <Tooltip>
                 <DropdownMenu>
                   <TooltipTrigger asChild>
@@ -405,7 +417,10 @@ export const CustomHeader = () => {
                   <p>Mi Cuenta</p>
                 </TooltipContent>
               </Tooltip>
-            ) : (
+            </Activity>
+
+            {/* login button */}
+            <Activity mode={user ? "hidden" : "visible"}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" asChild>
@@ -418,8 +433,9 @@ export const CustomHeader = () => {
                   <p>Iniciar Sesión</p>
                 </TooltipContent>
               </Tooltip>
-            )}
+            </Activity>
 
+            {/* mobile menu button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -576,7 +592,7 @@ export const CustomHeader = () => {
               Niños
             </Link>
 
-            <Activity mode={canAccessAdmin ? "hidden" : "visible"}>
+            <Activity mode={isAdminAccess() ? "visible" : "hidden"}>
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-md mt-2 ${
