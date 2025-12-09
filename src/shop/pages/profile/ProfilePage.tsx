@@ -152,7 +152,7 @@ export const ProfilePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-4xl font-bold mb-8">Mi Perfil</h1>
+      <h1 className="text-4xl font-bold mb-8 font-montserrat">Mi Perfil</h1>
 
       <Tabs defaultValue="orders" className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-3">

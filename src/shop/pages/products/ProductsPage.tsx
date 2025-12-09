@@ -1,11 +1,5 @@
-import { useState, useEffect, Activity } from "react";
+import { useState, Activity } from "react";
 import { ShoppingBag } from "lucide-react";
-import tshirtWhite from "@/assets/tesla-tshirt-white.jpg";
-import jacketBlack from "@/assets/tesla-jacket-black.jpg";
-import hoodieGray from "@/assets/tesla-hoodie-gray.jpg";
-import capBlack from "@/assets/tesla-cap-black.jpg";
-import sweatshirtNavy from "@/assets/tesla-sweatshirt-navy.jpg";
-import longsleeveCharcoal from "@/assets/tesla-longsleeve-charcoal.jpg";
 import { useParams } from "react-router";
 import { EmptyState } from "@/components/custom/EmptyState";
 import { CustomProductCard } from "@/shop/components/CustomProductCart";
@@ -15,103 +9,19 @@ import CustomSidebarFilters from "@/shop/components/CustomSidebarFilters";
 import CustomProductsToolbar from "@/shop/components/CustomProductToolbar";
 import CustomActiveFilters from "@/shop/components/CustomActiveFilters";
 import { useProductFilters } from "@/shop/hooks/useProductFilters";
-
-// Mock data - this will be replaced with real data from database
-const mockProducts = [
-  {
-    id: "1",
-    name: "Camiseta Tesla Wordmark",
-    description: "Camiseta blanca con el icónico logo de Tesla",
-    price: 35.0,
-    type: "men",
-    gender: "masculine",
-    sizes: ["S", "M", "L", "XL"],
-    tags: ["casual", "camiseta", "tesla"],
-    stock: 15,
-    imageUrl: tshirtWhite
-  },
-  {
-    id: "2",
-    name: "Chaqueta Tesla Premium",
-    description: "Chaqueta negra con capucha y logo Tesla",
-    price: 150.0,
-    type: "men",
-    gender: "masculine",
-    sizes: ["S", "M", "L", "XL"],
-    tags: ["abrigo", "premium", "tesla"],
-    stock: 8,
-    imageUrl: jacketBlack
-  },
-  {
-    id: "3",
-    name: "Sudadera Tesla Gris",
-    description: "Sudadera con capucha color gris con logo Tesla",
-    price: 65.0,
-    type: "men",
-    gender: "masculine",
-    sizes: ["S", "M", "L", "XL"],
-    tags: ["sudadera", "casual", "tesla"],
-    stock: 20,
-    imageUrl: hoodieGray
-  },
-  {
-    id: "4",
-    name: "Gorra Tesla Icon",
-    description: "Gorra negra con logo Tesla bordado",
-    price: 30.0,
-    type: "men",
-    gender: "masculine",
-    sizes: ["única"],
-    tags: ["gorra", "accesorio", "tesla"],
-    stock: 25,
-    imageUrl: capBlack
-  },
-  {
-    id: "5",
-    name: "Sudadera Tesla Navy",
-    description: "Sudadera azul marino con logo Tesla",
-    price: 60.0,
-    type: "women",
-    gender: "feminine",
-    sizes: ["S", "M", "L", "XL"],
-    tags: ["sudadera", "casual", "tesla"],
-    stock: 12,
-    imageUrl: sweatshirtNavy
-  },
-  {
-    id: "6",
-    name: "Camiseta Manga Larga Tesla",
-    description: "Camiseta de manga larga color carbón con logo Tesla",
-    price: 45.0,
-    type: "men",
-    gender: "masculine",
-    sizes: ["S", "M", "L", "XL"],
-    tags: ["camiseta", "manga larga", "tesla"],
-    stock: 18,
-    imageUrl: longsleeveCharcoal
-  }
-];
+import { useProducts } from "@/shop/hooks/useProducts";
+import type { Product } from "@/types/product.interface";
 
 export const ProductsPage = () => {
   const { gender } = useParams<{ gender?: string }>();
   const [showFilters, setShowFilters] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
   const { searchQuery, hasActiveFilters, handleClearFilters } =
     useProductFilters();
 
-  // Simular carga de datos del backend
-  useEffect(() => {
-    setIsLoading(true);
-    // Simular delay de carga (en producción esto sería una llamada real al backend)
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+  const { data, isLoading } = useProducts();
 
-    return () => clearTimeout(timer);
-  }, []);
-
-  const filteredProducts: any[] = mockProducts;
+  const filteredProducts: Product[] = data?.products || [];
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -132,10 +42,8 @@ export const ProductsPage = () => {
             : "Descubre nuestra colección completa"}
         </p>
         <p className="text-sm text-muted-foreground mt-2">
-          {filteredProducts.length}{" "}
-          {filteredProducts.length === 1
-            ? "producto encontrado"
-            : "productos encontrados"}
+          {data?.total}{" "}
+          {data?.total === 1 ? "producto encontrado" : "productos encontrados"}
         </p>
       </div>
 
@@ -194,7 +102,9 @@ export const ProductsPage = () => {
           </Activity>
 
           {/* Pagination */}
-          {filteredProducts.length > 0 && <CustomPagination totalPages={6} />}
+          {filteredProducts.length > 0 && (
+            <CustomPagination totalPages={data?.totalPages || 1} />
+          )}
         </div>
       </div>
     </div>

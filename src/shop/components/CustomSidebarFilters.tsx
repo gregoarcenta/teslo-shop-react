@@ -3,11 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { useProductFilters } from "../hooks/useProductFilters";
-import {
-  CATEGORY_LABELS,
-  CATEGORY_OPTIONS,
-  SIZE_OPTIONS
-} from "@/types/filters";
+import { CATEGORY_OPTIONS, SIZE_OPTIONS } from "@/types/filters";
 
 interface CustomSidebarFiltersProps {
   showFilters: boolean;
@@ -42,14 +38,17 @@ const CustomSidebarFilters = ({ showFilters }: CustomSidebarFiltersProps) => {
         <div className="space-y-3 mb-6">
           <Label>Categoría</Label>
           {CATEGORY_OPTIONS.map((category) => (
-            <div key={category} className="flex items-center space-x-2">
+            <div key={category.value} className="flex items-center space-x-2">
               <Checkbox
-                id={category}
-                checked={selectedCategories.includes(category)}
-                onCheckedChange={() => handleCategoriesChanged(category)}
+                id={category.value}
+                checked={selectedCategories.includes(category.value)}
+                onCheckedChange={() => handleCategoriesChanged(category.value)}
               />
-              <label htmlFor={category} className="text-sm cursor-pointer">
-                {CATEGORY_LABELS[category]}
+              <label
+                htmlFor={category.value}
+                className="text-sm cursor-pointer"
+              >
+                {category.label}
               </label>
             </div>
           ))}

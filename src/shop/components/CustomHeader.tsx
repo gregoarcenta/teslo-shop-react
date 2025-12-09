@@ -127,7 +127,9 @@ export const CustomHeader = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(
+        `${location.pathname}?search=${encodeURIComponent(searchQuery.trim())}`
+      );
       setSearchQuery("");
       // Quitar foco del input
       desktopSearchRef.current?.blur();

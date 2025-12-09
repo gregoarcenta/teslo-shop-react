@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useProductFilters } from "../hooks/useProductFilters";
-import { CATEGORY_LABELS } from "@/types/filters";
+import { CATEGORY_OPTIONS } from "@/types/filters";
 
 const CustomActiveFilters = () => {
   const {
@@ -43,7 +43,8 @@ const CustomActiveFilters = () => {
       {/* Category Badges */}
       {selectedCategories.map((cat) => (
         <Badge key={cat} variant="secondary" className="gap-1">
-          {CATEGORY_LABELS[cat] || cat}
+          {CATEGORY_OPTIONS.find((option) => option.value === cat)?.label ||
+            cat}
           <button
             type="button"
             onClick={() => removeFilter("category", cat)}

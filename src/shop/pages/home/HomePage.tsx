@@ -61,7 +61,7 @@ export const HomePage = () => {
                 </Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link to="/products?type=men">Colección Hombres</Link>
+                <Link to="/products/men">Colección Hombres</Link>
               </Button>
             </div>
           </div>
@@ -108,12 +108,12 @@ export const HomePage = () => {
           ].map((category, index) => (
             <Link
               key={category.type}
-              to={`/products?type=${category.type}`}
+              to={`/products/${category.type}`}
               className="group relative h-96 rounded-2xl overflow-hidden shadow-medium hover:shadow-glow transition-all duration-300 animate-scale-in"
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <div
-                className={`absolute inset-0 bg-gradient-to-br ${category.gradient} opacity-80 group-hover:opacity-90 transition-opacity`}
+                className={`absolute inset-0 bg-linear-to-br ${category.gradient} opacity-80 group-hover:opacity-90 transition-opacity`}
               />
               <div className="absolute inset-0 flex items-center justify-center">
                 <h3 className="text-3xl font-bold text-white group-hover:scale-110 transition-transform">

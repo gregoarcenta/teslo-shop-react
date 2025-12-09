@@ -9,15 +9,12 @@ import {
 
 import { toast } from "sonner";
 import { Link } from "react-router";
+import type { Product } from "@/types/product.interface";
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  imageUrl: string;
-  stock: number;
-}
+const IMAGE_BASE_URL =
+  "https://res.cloudinary.com/dy7luvgd5/image/upload/v1735063243/";
+
+// const IMAGE_BASE_URL2 = import.meta.env.VITE_API_URL + "/files/product/image/";
 
 interface ProductCardProps {
   product: Product;
@@ -27,7 +24,6 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
   const [isAnimatingCart, setIsAnimatingCart] = useState(false);
-  //   const { toast } = useToast();
 
   const handleFavoriteClick = () => {
     setIsFavorite(!isFavorite);
@@ -35,8 +31,8 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
     setTimeout(() => setIsAnimatingHeart(false), 600);
     toast(isFavorite ? "Eliminado de favoritos" : "Agregado a favoritos", {
       description: isFavorite
-        ? `${product.name} fue eliminado de tus favoritos`
-        : `${product.name} fue agregado a tus favoritos`
+        ? `${product.title} fue eliminado de tus favoritos`
+        : `${product.title} fue agregado a tus favoritos`
     });
   };
 
@@ -45,7 +41,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
     setTimeout(() => setIsAnimatingCart(false), 600);
 
     toast("Producto agregado", {
-      description: `${product.name} fue agregado a tu carrito`
+      description: `${product.title} fue agregado a tu carrito`
     });
   };
 
@@ -54,9 +50,14 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
       <Link to={`/product/${product.id}`}>
         <div className="aspect-square overflow-hidden bg-secondary/30">
           <img
-            src={product.imageUrl}
-            alt={product.name}
+            src={
+              product.images.length
+                ? IMAGE_BASE_URL + product.images[0]
+                : "/no-image.png"
+            }
+            alt={product.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            crossOrigin="anonymous"
           />
         </div>
       </Link>
@@ -88,7 +89,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
       <div className="p-4">
         <Link to={`/product/${product.id}`}>
           <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
-            {product.name}
+            {product.title}
           </h3>
         </Link>
         <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
@@ -97,7 +98,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
 
         <div className="flex items-center justify-between">
           <span className="text-2xl font-bold bg-linear-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-            ${product.price.toFixed(2)}
+            ${product.price}
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
