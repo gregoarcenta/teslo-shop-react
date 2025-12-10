@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,44 +10,25 @@ import {
   RefreshCw,
   ChevronLeft
 } from "lucide-react";
+import { Link, Navigate, useParams } from "react-router";
 import { toast } from "sonner";
-import jacketBlack from "@/assets/tesla-jacket-black.jpg";
-import hoodieGray from "@/assets/tesla-hoodie-gray.jpg";
-import sweatshirtNavy from "@/assets/tesla-sweatshirt-navy.jpg";
-import { Link, useParams } from "react-router";
+import { useQuery } from "@tanstack/react-query";
+import { getProductAction } from "@/shop/actions/get-product.action";
 
-// Mock product - will be replaced with real data
-const mockProduct = {
-  id: "2",
-  name: "Chaqueta Tesla Premium",
-  description:
-    "Chaqueta de alta calidad con logo Tesla. Diseñada para ofrecer estilo y funcionalidad. Fabricada con materiales premium que garantizan durabilidad y comodidad. Perfecta para cualquier ocasión.",
-  price: 150.0,
-  type: "men",
-  gender: "masculine",
-  sizes: ["S", "M", "L", "XL"],
-  tags: ["abrigo", "premium", "tesla"],
-  stock: 8,
-  images: [jacketBlack, hoodieGray, sweatshirtNavy]
-};
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
 export const ProductPage = () => {
-  const { id } = useParams();
+  const { idSlug } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Simular carga del producto
-    setIsLoading(true);
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [id]);
+  const { data: product, isLoading } = useQuery({
+    queryKey: ["product", idSlug],
+    queryFn: () => getProductAction(idSlug!),
+    staleTime: 1000 * 60 * 5,
+    retry: false
+  });
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -118,6 +99,16 @@ export const ProductPage = () => {
     );
   }
 
+  if (!product) {
+    return <Navigate to="/products" />;
+  }
+
+  // if (!product.images || product.images.length === 0) {
+  //   product.images = [
+  //     "https://via.placeholder.com/600x600?text=No+Image+Available"
+  //   ];
+  // }
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Back Button */}
@@ -135,15 +126,15 @@ export const ProductPage = () => {
           {/* Main Image */}
           <div className="aspect-square rounded-2xl overflow-hidden bg-secondary/30 shadow-medium">
             <img
-              src={mockProduct.images[selectedImage]}
-              alt={mockProduct.name}
+              src={IMAGE_BASE_URL + product.images[selectedImage]}
+              alt={product.title}
               className="w-full h-full object-cover"
             />
           </div>
 
           {/* Thumbnail Images */}
           <div className="grid grid-cols-3 gap-4">
-            {mockProduct.images.map((image, index) => (
+            {product.images.map((image, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(index)}
@@ -154,8 +145,8 @@ export const ProductPage = () => {
                 }`}
               >
                 <img
-                  src={image}
-                  alt={`${mockProduct.name} ${index + 1}`}
+                  src={IMAGE_BASE_URL + image}
+                  alt={`${product.title} ${index + 1}`}
                   className="w-full h-full object-cover"
                 />
               </button>
@@ -167,31 +158,31 @@ export const ProductPage = () => {
         <div className="space-y-6">
           {/* Title & Price */}
           <div>
-            <h1 className="text-4xl font-bold mb-2">{mockProduct.name}</h1>
+            <h1 className="text-4xl font-bold mb-2">{product.title}</h1>
             <div className="flex items-center gap-2 mb-4">
               <Badge variant="outline" className="border-primary text-primary">
-                {mockProduct.type === "men"
+                {product.gender === "men"
                   ? "Hombre"
-                  : mockProduct.type === "women"
+                  : product.gender === "women"
                   ? "Mujer"
-                  : mockProduct.type === "kids"
-                  ? "Niños"
+                  : product.gender === "kid"
+                  ? "Niño"
                   : "Unisex"}
               </Badge>
-              {mockProduct.tags.map((tag) => (
+              {product.tags.map((tag) => (
                 <Badge key={tag} variant="secondary">
                   {tag}
                 </Badge>
               ))}
             </div>
             <p className="text-3xl font-bold bg-linear-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-              ${mockProduct.price.toFixed(2)}
+              ${product.price}
             </p>
           </div>
 
           {/* Description */}
           <p className="text-muted-foreground leading-relaxed">
-            {mockProduct.description}
+            {product.description}
           </p>
 
           {/* Size Selection */}
@@ -200,7 +191,7 @@ export const ProductPage = () => {
               Selecciona tu talla:
             </label>
             <div className="flex flex-wrap gap-2">
-              {mockProduct.sizes.map((size) => (
+              {product.sizes.map((size) => (
                 <Button
                   key={size}
                   variant={selectedSize === size ? "default" : "outline"}
@@ -231,13 +222,13 @@ export const ProductPage = () => {
                 variant="outline"
                 size="icon"
                 onClick={() =>
-                  setQuantity(Math.min(mockProduct.stock, quantity + 1))
+                  setQuantity(Math.min(product.stock, quantity + 1))
                 }
               >
                 +
               </Button>
               <span className="text-sm text-muted-foreground ml-2">
-                ({mockProduct.stock} disponibles)
+                ({product.stock} disponibles)
               </span>
             </div>
           </div>
@@ -255,11 +246,11 @@ export const ProductPage = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => setIsFavorite(!isFavorite)}
+              // onClick={() => setIsFavorite(!isFavorite)}
             >
               <Heart
                 className={`h-5 w-5 ${
-                  isFavorite ? "fill-destructive text-destructive" : ""
+                  product.isLiked ? "fill-destructive text-destructive" : ""
                 }`}
               />
             </Button>

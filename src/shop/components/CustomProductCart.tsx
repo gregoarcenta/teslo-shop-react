@@ -11,26 +11,22 @@ import { toast } from "sonner";
 import { Link } from "react-router";
 import type { Product } from "@/types/product.interface";
 
-const IMAGE_BASE_URL =
-  "https://res.cloudinary.com/dy7luvgd5/image/upload/v1735063243/";
-
-// const IMAGE_BASE_URL2 = import.meta.env.VITE_API_URL + "/files/product/image/";
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
 interface ProductCardProps {
   product: Product;
 }
 
 export const CustomProductCard = ({ product }: ProductCardProps) => {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
   const [isAnimatingCart, setIsAnimatingCart] = useState(false);
 
   const handleFavoriteClick = () => {
-    setIsFavorite(!isFavorite);
+    // setIsFavorite(!isFavorite);
     setIsAnimatingHeart(true);
     setTimeout(() => setIsAnimatingHeart(false), 600);
-    toast(isFavorite ? "Eliminado de favoritos" : "Agregado a favoritos", {
-      description: isFavorite
+    toast(product.isLiked ? "Eliminado de favoritos" : "Agregado a favoritos", {
+      description: product.isLiked
         ? `${product.title} fue eliminado de tus favoritos`
         : `${product.title} fue agregado a tus favoritos`
     });
@@ -73,7 +69,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
           >
             <Heart
               className={`h-5 w-5 transition-all ${
-                isFavorite
+                product.isLiked
                   ? "fill-destructive text-destructive"
                   : "text-muted-foreground"
               } ${isAnimatingHeart ? "animate-heart-like" : ""}`}
@@ -81,7 +77,9 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}</p>
+          <p>
+            {product.isLiked ? "Quitar de favoritos" : "Agregar a favoritos"}
+          </p>
         </TooltipContent>
       </Tooltip>
 
