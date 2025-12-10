@@ -98,7 +98,8 @@ export const CustomHeader = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const user = useAuthStore((state) => state.user);
+  const authStatus = useAuthStore((state) => state.authStatus);
+  const isAdminAccess = useAuthStore((state) => state.isAdminAccess());
   const logout = useAuthStore((state) => state.logout);
 
   const desktopSearchRef = useRef<HTMLInputElement>(null);
@@ -106,12 +107,6 @@ export const CustomHeader = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isSearchOpen = searchQuery.trim().length > 0;
-
-  const isAdminAccess = () => {
-    return (
-      user?.roles.includes("admin") || user?.roles.includes("test") || false
-    );
-  };
 
   // Productos sugeridos para autocompletado (máximo 5)
   const suggestedProducts = useMemo(() => {
@@ -339,7 +334,7 @@ export const CustomHeader = () => {
           {/* Actions */}
           <div className="flex items-center space-x-2">
             {/* admin botom */}
-            <Activity mode={isAdminAccess() ? "visible" : "hidden"}>
+            <Activity mode={isAdminAccess ? "visible" : "hidden"}>
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-1.5 rounded-md ${
@@ -387,7 +382,9 @@ export const CustomHeader = () => {
             </Tooltip>
 
             {/* user account button */}
-            <Activity mode={user ? "visible" : "hidden"}>
+            <Activity
+              mode={authStatus === "authenticated" ? "visible" : "hidden"}
+            >
               <Tooltip>
                 <DropdownMenu>
                   <TooltipTrigger asChild>
@@ -419,7 +416,9 @@ export const CustomHeader = () => {
             </Activity>
 
             {/* login button */}
-            <Activity mode={user ? "hidden" : "visible"}>
+            <Activity
+              mode={authStatus === "not-authenticated" ? "visible" : "hidden"}
+            >
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" asChild>
@@ -591,7 +590,7 @@ export const CustomHeader = () => {
               Niños
             </Link>
 
-            <Activity mode={isAdminAccess() ? "visible" : "hidden"}>
+            <Activity mode={isAdminAccess ? "visible" : "hidden"}>
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-md mt-2 ${

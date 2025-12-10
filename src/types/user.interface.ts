@@ -6,4 +6,4 @@ export interface User {
   roles: Role[];
 }
 
-export type Role = "admin" | "user" | "test";
+export type Role = "admin" | "user" | "tester";
