@@ -14,6 +14,11 @@ import { AdminProductPage } from "./admin/pages/product/AdminProductPage";
 import { NotFound } from "./shop/pages/404/NotFound";
 import { AdminNotFound } from "./admin/pages/404/AdminNotFound";
 import { ThankYouPage } from "./shop/pages/thanks/ThankYou";
+import {
+  AdminAuthenticatedRoute,
+  AuthenticatedRoute,
+  NotAuthenticatedRoute
+} from "./components/routes/ProtectedRoutes";
 
 const AdminLayout = lazy(() => import("./admin/layout/AdminLayout"));
 
@@ -29,7 +34,11 @@ export const appRouter = createBrowserRouter([
       },
       {
         path: "/auth",
-        element: <AuthPage />
+        element: (
+          <NotAuthenticatedRoute>
+            <AuthPage />
+          </NotAuthenticatedRoute>
+        )
       },
       {
         path: "products",
@@ -45,19 +54,35 @@ export const appRouter = createBrowserRouter([
       },
       {
         path: "cart",
-        element: <CartPage />
+        element: (
+          <AuthenticatedRoute>
+            <CartPage />
+          </AuthenticatedRoute>
+        )
       },
       {
         path: "favorites",
-        element: <FavoritesPage />
+        element: (
+          <AuthenticatedRoute>
+            <FavoritesPage />
+          </AuthenticatedRoute>
+        )
       },
       {
         path: "profile",
-        element: <ProfilePage />
+        element: (
+          <AuthenticatedRoute>
+            <ProfilePage />
+          </AuthenticatedRoute>
+        )
       },
       {
         path: "thanks",
-        element: <ThankYouPage />
+        element: (
+          <AuthenticatedRoute>
+            <ThankYouPage />
+          </AuthenticatedRoute>
+        )
       },
       {
         path: "*",
@@ -68,7 +93,11 @@ export const appRouter = createBrowserRouter([
   // Admin routes
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: (
+      <AdminAuthenticatedRoute>
+        <AdminLayout />
+      </AdminAuthenticatedRoute>
+    ),
     children: [
       {
         index: true,
