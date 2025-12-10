@@ -43,7 +43,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
 
   return (
     <div className="group relative bg-card rounded-lg overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300">
-      <Link to={`/product/${product.id}`}>
+      <Link to={`/product/${product.slug}`}>
         <div className="aspect-square overflow-hidden bg-secondary/30">
           <img
             src={
@@ -85,7 +85,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
 
       {/* Content */}
       <div className="p-4">
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${product.slug}`}>
           <h3 className="font-semibold text-lg mb-1 group-hover:text-primary transition-colors">
             {product.title}
           </h3>

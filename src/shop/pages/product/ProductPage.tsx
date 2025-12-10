@@ -129,6 +129,7 @@ export const ProductPage = () => {
               src={IMAGE_BASE_URL + product.images[selectedImage]}
               alt={product.title}
               className="w-full h-full object-cover"
+              crossOrigin="anonymous"
             />
           </div>
 
@@ -148,6 +149,7 @@ export const ProductPage = () => {
                   src={IMAGE_BASE_URL + image}
                   alt={`${product.title} ${index + 1}`}
                   className="w-full h-full object-cover"
+                  crossOrigin="anonymous"
                 />
               </button>
             ))}

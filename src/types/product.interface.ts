@@ -24,3 +24,11 @@ export interface ProductsResponse {
   limit: number;
   totalPages: number;
 }
+
+export interface ProductSuggestionResponse {
+  id: string;
+  title: string;
+  slug: string;
+  price: string;
+  image: string;
+}

@@ -6,11 +6,12 @@ import {
   Menu,
   LogOut,
   LogIn,
-  Shield
+  Shield,
+  Loader2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useMemo, useRef, Activity } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,81 +23,21 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import tshirtWhite from "@/assets/tesla-tshirt-white.jpg";
-import jacketBlack from "@/assets/tesla-jacket-black.jpg";
-import hoodieGray from "@/assets/tesla-hoodie-gray.jpg";
-import capBlack from "@/assets/tesla-cap-black.jpg";
-import sweatshirtNavy from "@/assets/tesla-sweatshirt-navy.jpg";
-import longsleeveCharcoal from "@/assets/tesla-longsleeve-charcoal.jpg";
 import { Link, useLocation, useNavigate } from "react-router";
 import CustomLogo from "@/components/custom/CustomLogo";
 import { useAuthStore } from "@/auth/store/auth.store";
+import { useDebounce } from "use-debounce";
+import { useSearchProducts } from "../hooks/useSearchProducts";
 
-// Mock data - same as in Products page
-const mockProducts = [
-  {
-    id: "1",
-    name: "Camiseta Tesla Wordmark",
-    description: "Camiseta blanca con el icónico logo de Tesla",
-    price: 35.0,
-    type: "men",
-    tags: ["casual", "camiseta", "tesla"],
-    imageUrl: tshirtWhite
-  },
-  {
-    id: "2",
-    name: "Chaqueta Tesla Premium",
-    description: "Chaqueta negra con capucha y logo Tesla",
-    price: 150.0,
-    type: "men",
-    tags: ["abrigo", "premium", "tesla"],
-    imageUrl: jacketBlack
-  },
-  {
-    id: "3",
-    name: "Sudadera Tesla Gris",
-    description: "Sudadera con capucha color gris con logo Tesla",
-    price: 65.0,
-    type: "men",
-    tags: ["sudadera", "casual", "tesla"],
-    imageUrl: hoodieGray
-  },
-  {
-    id: "4",
-    name: "Gorra Tesla Icon",
-    description: "Gorra negra con logo Tesla bordado",
-    price: 30.0,
-    type: "men",
-    tags: ["gorra", "accesorio", "tesla"],
-    imageUrl: capBlack
-  },
-  {
-    id: "5",
-    name: "Sudadera Tesla Navy",
-    description: "Sudadera azul marino con logo Tesla",
-    price: 60.0,
-    type: "women",
-    tags: ["sudadera", "casual", "tesla"],
-    imageUrl: sweatshirtNavy
-  },
-  {
-    id: "6",
-    name: "Camiseta Manga Larga Tesla",
-    description: "Camiseta de manga larga color carbón con logo Tesla",
-    price: 45.0,
-    type: "men",
-    tags: ["camiseta", "manga larga", "tesla"],
-    imageUrl: longsleeveCharcoal
-  }
-];
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
 export const CustomHeader = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const authStatus = useAuthStore((state) => state.authStatus);
   const isAdminAccess = useAuthStore((state) => state.isAdminAccess());
@@ -105,21 +46,17 @@ export const CustomHeader = () => {
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
-  const isActive = (path: string) => location.pathname === path;
-  const isSearchOpen = searchQuery.trim().length > 0;
+  // Debounce con librería use-debounce
+  const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
-  // Productos sugeridos para autocompletado (máximo 5)
-  const suggestedProducts = useMemo(() => {
-    if (!searchQuery.trim()) return [];
-    const query = searchQuery.toLowerCase();
-    const filtered = mockProducts.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.description.toLowerCase().includes(query) ||
-        p.tags.some((tag) => tag.toLowerCase().includes(query))
-    );
-    return filtered.slice(0, 5);
-  }, [searchQuery]);
+  // Query con TanStack Query
+  const { data: suggestedProducts = [], isLoading } = useSearchProducts(
+    debouncedSearchQuery,
+    debouncedSearchQuery.trim().length > 2
+  );
+
+  const isActive = (path: string) => location.pathname === path;
+  const isSearchOpen = searchQuery.trim().length > 1;
 
   // Reset selected index when products change
   useEffect(() => {
@@ -127,29 +64,35 @@ export const CustomHeader = () => {
   }, [suggestedProducts]);
 
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(
-        `${location.pathname}?search=${encodeURIComponent(searchQuery.trim())}`
-      );
-      setSearchQuery("");
-      // Quitar foco del input
-      desktopSearchRef.current?.blur();
-      mobileSearchRef.current?.blur();
-      setIsMenuOpen(false);
+    if (!searchQuery.trim()) return;
+
+    const currentPath = location.pathname;
+    const trimmedQuery = searchQuery.trim();
+
+    // Si está en una ruta de productos, mantener la ruta
+    if (currentPath.startsWith("/products")) {
+      navigate(`${currentPath}?search=${encodeURIComponent(trimmedQuery)}`);
+    } else {
+      // Si está en otra ruta, ir a /products con búsqueda
+      navigate(`/products?search=${encodeURIComponent(trimmedQuery)}`);
     }
+
+    // Limpiar y quitar foco
+    setSearchQuery("");
+    desktopSearchRef.current?.blur();
+    mobileSearchRef.current?.blur();
+    setIsMenuOpen(false);
   };
 
-  const handleProductSelect = (productId: string) => {
-    navigate(`/product/${productId}`);
+  const handleProductSelect = (productSlug: string) => {
+    navigate(`/product/${productSlug}`);
     setSearchQuery("");
-    // Quitar foco del input
     desktopSearchRef.current?.blur();
     mobileSearchRef.current?.blur();
     setIsMenuOpen(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Total de items = productos sugeridos + 1 opción de búsqueda general
     const totalItems = suggestedProducts.length + 1;
 
     switch (e.key) {
@@ -163,11 +106,10 @@ export const CustomHeader = () => {
         break;
       case "Enter":
         e.preventDefault();
-        // Si está en el último índice (opción de búsqueda general) o no hay productos
         if (selectedIndex === suggestedProducts.length) {
           handleSearch();
         } else if (suggestedProducts[selectedIndex]) {
-          handleProductSelect(suggestedProducts[selectedIndex].id);
+          handleProductSelect(suggestedProducts[selectedIndex].slug);
         } else {
           handleSearch();
         }
@@ -175,13 +117,132 @@ export const CustomHeader = () => {
       case "Escape":
         e.preventDefault();
         setSearchQuery("");
+        desktopSearchRef.current?.blur();
+        mobileSearchRef.current?.blur();
         break;
     }
   };
 
-  const handleLogout = async () => {
+  const handleLogout = () => {
     logout();
     navigate("/auth");
+  };
+
+  // Componente SearchDropdown
+  const SearchDropdown = ({ isMobile = false }: { isMobile?: boolean }) => {
+    if (!isSearchOpen) return null;
+
+    return (
+      <div className="absolute top-full mt-2 w-full bg-popover border border-border rounded-md shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="p-2">
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              <span className="ml-2 text-sm text-muted-foreground">
+                Buscando...
+              </span>
+            </div>
+          )}
+
+          {/* Productos sugeridos */}
+          {!isLoading && suggestedProducts.length > 0 && (
+            <>
+              <p className="text-xs font-medium text-muted-foreground px-2 py-1">
+                Sugerencias
+              </p>
+              <div className="space-y-1">
+                {suggestedProducts.map((product, index) => (
+                  <button
+                    key={product.id}
+                    onClick={() => {
+                      handleProductSelect(product.slug);
+                      if (isMobile) setIsMenuOpen(false);
+                    }}
+                    className={`cursor-pointer w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
+                      index === selectedIndex
+                        ? "bg-primary text-primary-foreground"
+                        : "hover:bg-muted"
+                    }`}
+                  >
+                    <img
+                      src={IMAGE_BASE_URL + product.image}
+                      alt={product.title}
+                      className="w-10 h-10 object-cover rounded"
+                      loading="lazy"
+                      crossOrigin="anonymous"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`font-medium text-sm truncate ${
+                          index === selectedIndex
+                            ? "text-primary-foreground"
+                            : "text-foreground"
+                        }`}
+                      >
+                        {product.title}
+                      </p>
+                      <p
+                        className={`text-sm truncate ${
+                          index === selectedIndex
+                            ? "text-primary-foreground/80"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        ${product.price}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              <div className="border-t border-border my-2"></div>
+            </>
+          )}
+
+          {/* Opción de búsqueda general - Solo si hay query */}
+          {searchQuery.trim() && (
+            <button
+              onClick={() => {
+                handleSearch();
+                if (isMobile) setIsMenuOpen(false);
+              }}
+              className={`cursor-pointer w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
+                selectedIndex === suggestedProducts.length
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded flex items-center justify-center ${
+                  selectedIndex === suggestedProducts.length
+                    ? "bg-primary-foreground/20"
+                    : "bg-muted"
+                }`}
+              >
+                <Search
+                  className={`h-5 w-5 ${
+                    selectedIndex === suggestedProducts.length
+                      ? "text-primary-foreground"
+                      : "text-muted-foreground"
+                  }`}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p
+                  className={`font-medium text-sm ${
+                    selectedIndex === suggestedProducts.length
+                      ? "text-primary-foreground"
+                      : "text-foreground"
+                  }`}
+                >
+                  Ver todos los resultados para "{searchQuery}"
+                </p>
+              </div>
+            </button>
+          )}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -189,7 +250,6 @@ export const CustomHeader = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-
           <CustomLogo />
 
           {/* Desktop Navigation */}
@@ -228,7 +288,7 @@ export const CustomHeader = () => {
             </Link>
           </div>
 
-          {/* Search Bar */}
+          {/* Search Bar Desktop */}
           <div className="hidden md:flex items-center max-w-md flex-1 mx-8 relative">
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
@@ -241,103 +301,16 @@ export const CustomHeader = () => {
                 className="pl-10 bg-secondary/50 border-0"
               />
             </div>
-            <Activity mode={isSearchOpen ? "visible" : "hidden"}>
-              <div className="absolute top-full mt-2 w-full bg-popover border border-border rounded-md shadow-lg z-50">
-                <div className="p-2">
-                  {suggestedProducts.length > 0 && (
-                    <>
-                      <p className="text-xs font-medium text-muted-foreground px-2 py-1">
-                        Sugerencias
-                      </p>
-                      <div className="space-y-1">
-                        {suggestedProducts.map((product, index) => (
-                          <button
-                            key={product.id}
-                            onClick={() => handleProductSelect(product.id)}
-                            className={`w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
-                              index === selectedIndex
-                                ? "bg-primary text-primary-foreground"
-                                : "hover:bg-muted"
-                            }`}
-                          >
-                            <img
-                              src={product.imageUrl}
-                              alt={product.name}
-                              className="w-10 h-10 object-cover rounded"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <p
-                                className={`font-medium text-sm truncate ${
-                                  index === selectedIndex
-                                    ? "text-primary-foreground"
-                                    : "text-foreground"
-                                }`}
-                              >
-                                {product.name}
-                              </p>
-                              <p
-                                className={`text-sm truncate ${
-                                  index === selectedIndex
-                                    ? "text-primary-foreground/80"
-                                    : "text-muted-foreground"
-                                }`}
-                              >
-                                ${product.price.toFixed(2)}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="border-t border-border my-2"></div>
-                    </>
-                  )}
-                  <button
-                    onClick={handleSearch}
-                    className={`w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
-                      selectedIndex === suggestedProducts.length
-                        ? "bg-primary text-primary-foreground"
-                        : "hover:bg-muted"
-                    }`}
-                  >
-                    <div
-                      className={`w-10 h-10 rounded flex items-center justify-center ${
-                        selectedIndex === suggestedProducts.length
-                          ? "bg-primary-foreground/20"
-                          : "bg-muted"
-                      }`}
-                    >
-                      <Search
-                        className={`h-5 w-5 ${
-                          selectedIndex === suggestedProducts.length
-                            ? "text-primary-foreground"
-                            : "text-muted-foreground"
-                        }`}
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p
-                        className={`font-medium text-sm ${
-                          selectedIndex === suggestedProducts.length
-                            ? "text-primary-foreground"
-                            : "text-foreground"
-                        }`}
-                      >
-                        Ver todos los resultados para "{searchQuery}"
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </Activity>
+            <SearchDropdown />
           </div>
 
           {/* Actions */}
           <div className="flex items-center space-x-2">
-            {/* admin botom */}
-            <Activity mode={isAdminAccess ? "visible" : "hidden"}>
+            {/* Admin button */}
+            {isAdminAccess && (
               <Link
                 to="/admin"
-                className={`flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-1.5 rounded-md ${
+                className={`hidden md:flex items-center gap-2 text-sm font-semibold transition-colors px-3 py-1.5 rounded-md ${
                   isActive("/admin")
                     ? "bg-primary text-primary-foreground"
                     : "bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground"
@@ -346,9 +319,9 @@ export const CustomHeader = () => {
                 <Shield className="h-4 w-4" />
                 Admin
               </Link>
-            </Activity>
+            )}
 
-            {/* favorites button */}
+            {/* Favorites button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -367,7 +340,7 @@ export const CustomHeader = () => {
               </TooltipContent>
             </Tooltip>
 
-            {/* cart button */}
+            {/* Cart button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button variant="ghost" size="icon" asChild>
@@ -381,10 +354,8 @@ export const CustomHeader = () => {
               </TooltipContent>
             </Tooltip>
 
-            {/* user account button */}
-            <Activity
-              mode={authStatus === "authenticated" ? "visible" : "hidden"}
-            >
+            {/* User account button */}
+            {authStatus === "authenticated" ? (
               <Tooltip>
                 <DropdownMenu>
                   <TooltipTrigger asChild>
@@ -413,12 +384,7 @@ export const CustomHeader = () => {
                   <p>Mi Cuenta</p>
                 </TooltipContent>
               </Tooltip>
-            </Activity>
-
-            {/* login button */}
-            <Activity
-              mode={authStatus === "not-authenticated" ? "visible" : "hidden"}
-            >
+            ) : (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button variant="ghost" size="icon" asChild>
@@ -431,9 +397,9 @@ export const CustomHeader = () => {
                   <p>Iniciar Sesión</p>
                 </TooltipContent>
               </Tooltip>
-            </Activity>
+            )}
 
-            {/* mobile menu button */}
+            {/* Mobile menu button */}
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -453,8 +419,9 @@ export const CustomHeader = () => {
         </div>
 
         {/* Mobile Menu */}
-        <Activity mode={isMenuOpen ? "visible" : "hidden"}>
+        {isMenuOpen && (
           <div className="md:hidden pb-4 space-y-3 animate-fade-in">
+            {/* Mobile Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
               <Input
@@ -462,105 +429,13 @@ export const CustomHeader = () => {
                 placeholder="Buscar productos..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => handleKeyDown(e)}
+                onKeyDown={handleKeyDown}
                 className="pl-10 bg-secondary/50 border-0"
               />
-              {isSearchOpen && searchQuery.trim().length > 0 && (
-                <div className="absolute top-full mt-2 w-full bg-popover border border-border rounded-md shadow-lg z-50">
-                  <div className="p-2">
-                    {suggestedProducts.length > 0 && (
-                      <>
-                        <p className="text-xs font-medium text-muted-foreground px-2 py-1">
-                          Sugerencias
-                        </p>
-                        <div className="space-y-1">
-                          {suggestedProducts.map((product, index) => (
-                            <button
-                              key={product.id}
-                              onClick={() => {
-                                handleProductSelect(product.id);
-                                setIsMenuOpen(false);
-                              }}
-                              className={`w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
-                                index === selectedIndex
-                                  ? "bg-primary text-primary-foreground"
-                                  : "hover:bg-muted"
-                              }`}
-                            >
-                              <img
-                                src={product.imageUrl}
-                                alt={product.name}
-                                className="w-10 h-10 object-cover rounded"
-                              />
-                              <div className="flex-1 min-w-0">
-                                <p
-                                  className={`font-medium text-sm truncate ${
-                                    index === selectedIndex
-                                      ? "text-primary-foreground"
-                                      : "text-foreground"
-                                  }`}
-                                >
-                                  {product.name}
-                                </p>
-                                <p
-                                  className={`text-sm truncate ${
-                                    index === selectedIndex
-                                      ? "text-primary-foreground/80"
-                                      : "text-muted-foreground"
-                                  }`}
-                                >
-                                  ${product.price.toFixed(2)}
-                                </p>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                        <div className="border-t border-border my-2"></div>
-                      </>
-                    )}
-                    <button
-                      onClick={() => {
-                        handleSearch();
-                        setIsMenuOpen(false);
-                      }}
-                      className={`w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
-                        selectedIndex === suggestedProducts.length
-                          ? "bg-primary text-primary-foreground"
-                          : "hover:bg-muted"
-                      }`}
-                    >
-                      <div
-                        className={`w-10 h-10 rounded flex items-center justify-center ${
-                          selectedIndex === suggestedProducts.length
-                            ? "bg-primary-foreground/20"
-                            : "bg-muted"
-                        }`}
-                      >
-                        <Search
-                          className={`h-5 w-5 ${
-                            selectedIndex === suggestedProducts.length
-                              ? "text-primary-foreground"
-                              : "text-muted-foreground"
-                          }`}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={`font-medium text-sm ${
-                            selectedIndex === suggestedProducts.length
-                              ? "text-primary-foreground"
-                              : "text-foreground"
-                          }`}
-                        >
-                          Ver todos los resultados para "{searchQuery}"
-                        </p>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
+              <SearchDropdown isMobile />
             </div>
 
+            {/* Mobile Navigation Links */}
             <Link
               to="/products"
               className="block text-sm font-medium text-foreground hover:text-primary transition-colors py-2"
@@ -590,7 +465,8 @@ export const CustomHeader = () => {
               Niños
             </Link>
 
-            <Activity mode={isAdminAccess ? "visible" : "hidden"}>
+            {/* Mobile Admin Link */}
+            {isAdminAccess && (
               <Link
                 to="/admin"
                 className={`flex items-center gap-2 text-sm font-semibold px-4 py-2.5 rounded-md mt-2 ${
@@ -603,9 +479,9 @@ export const CustomHeader = () => {
                 <Shield className="h-4 w-4" />
                 Panel de Admin
               </Link>
-            </Activity>
+            )}
           </div>
-        </Activity>
+        )}
       </div>
     </nav>
   );
