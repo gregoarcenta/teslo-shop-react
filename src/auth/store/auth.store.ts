@@ -2,6 +2,10 @@ import type { User } from "@/types/user.interface";
 import { create } from "zustand";
 import { checkStatusAction } from "../actions/check-auth.action";
 import { loginAction, type LoginCredentials } from "../actions/login.action";
+import {
+  registerAction,
+  type RegisterCredentials
+} from "../actions/register.action";
 
 type AuthSatus = "checking" | "authenticated" | "not-authenticated";
 
@@ -15,6 +19,7 @@ type AuthState = {
   login: (loginData: LoginCredentials) => Promise<void>;
   logout: () => void;
   checkAuthStatus: () => Promise<{ user: User | null }>;
+  register: (registerData: RegisterCredentials) => Promise<void>;
 };
 
 export const useAuthStore = create<AuthState>()((set, get) => ({
@@ -52,6 +57,17 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
       localStorage.setItem("teslo-access-token", accessToken);
       set({ user: user, authStatus: "authenticated" });
       return { user };
+    } catch (error) {
+      localStorage.removeItem("teslo-access-token");
+      set({ user: null, authStatus: "not-authenticated" });
+      throw error;
+    }
+  },
+  register: async (registerData) => {
+    try {
+      const { user, accessToken } = await registerAction(registerData);
+      localStorage.setItem("teslo-access-token", accessToken);
+      set({ user: user, authStatus: "authenticated" });
     } catch (error) {
       localStorage.removeItem("teslo-access-token");
       set({ user: null, authStatus: "not-authenticated" });

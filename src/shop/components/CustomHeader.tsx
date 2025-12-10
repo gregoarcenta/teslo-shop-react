@@ -181,7 +181,7 @@ export const CustomHeader = () => {
 
   const handleLogout = async () => {
     logout();
-    navigate("/");
+    navigate("/auth");
   };
 
   return (

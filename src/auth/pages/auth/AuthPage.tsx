@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { useMutation } from "@tanstack/react-query";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { toast } from "sonner";
+import type { AxiosError } from "axios";
 
 export const AuthPage = () => {
   const navigate = useNavigate();
@@ -23,14 +24,76 @@ export const AuthPage = () => {
   const [name, setName] = useState("");
 
   const login = useAuthStore((state) => state.login);
+  const register = useAuthStore((state) => state.register);
 
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
-      toast.success("¡Inicio de sesión exitoso!");
+      toast.info("¡Inicio de sesión exitoso!", { richColors: true });
       navigate("/");
     },
-    onError: (_) => toast.error("Correo o contraseña incorrectos")
+    onError: (_) =>
+      toast.error("Correo o contraseña incorrectos", {
+        richColors: true,
+        position: "bottom-center"
+      })
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: register,
+    onSuccess: () => {
+      toast.success("¡Cuenta creada exitosamente!");
+      navigate("/");
+    },
+    onError: (error: AxiosError<{ message: string[] }>) => {
+      const data = error.response?.data;
+      let errorDetail = Array.isArray(data?.message)
+        ? data.message[0]
+        : data?.message;
+
+      if (errorDetail === "password is not strong enough") {
+        toast.error("La contraseña no es lo suficientemente fuerte", {
+          description:
+            " Debe tener al menos 6 caracteres, una mayúscula, una minúscula y un número.",
+          duration: 8000,
+          richColors: true,
+          closeButton: true,
+          position: "bottom-center"
+        });
+        return;
+      }
+
+      if (
+        errorDetail === "fullName must be longer than or equal to 3 characters"
+      ) {
+        toast.error("El nombre completo debe tener al menos 3 caracteres", {
+          duration: 8000,
+          richColors: true,
+          closeButton: true,
+          position: "bottom-center"
+        });
+        return;
+      }
+
+      if (errorDetail?.includes("already exists")) {
+        toast.error("El correo electrónico ya está en uso", {
+          duration: 8000,
+          richColors: true,
+          closeButton: true,
+          position: "bottom-center"
+        });
+        return;
+      }
+
+      toast.error("Error al crear la cuenta", {
+        description: errorDetail,
+        duration: 8000,
+        richColors: true,
+        closeButton: true,
+        position: "bottom-center"
+      });
+      return;
+    }
   });
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,16 +106,15 @@ export const AuthPage = () => {
     loginMutation.mutate({ email, password });
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const error = false;
+    const formData = new FormData(e.currentTarget);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+    const name = formData.get("name") as string;
 
-    if (error) {
-      toast.error("Error een el registro");
-    } else {
-      toast.success("¡Cuenta creada exitosamente!");
-    }
+    registerMutation.mutate({ email, password, fullName: name });
   };
 
   const handleGoogleLogin = async () => {
@@ -169,12 +231,13 @@ export const AuthPage = () => {
 
               {/* register */}
               <TabsContent value="signup">
-                <form onSubmit={handleSignup} className="space-y-4">
+                <form onSubmit={handleRegister} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="name">Nombre Completo</Label>
                     <Input
                       id="name"
                       type="text"
+                      name="name"
                       placeholder="Juan Pérez"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -186,6 +249,7 @@ export const AuthPage = () => {
                     <Input
                       id="signup-email"
                       type="email"
+                      name="email"
                       placeholder="tu@email.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -197,19 +261,22 @@ export const AuthPage = () => {
                     <Input
                       id="signup-password"
                       type="password"
+                      name="password"
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                   </div>
-                  {/* <Button
+                  <Button
                     type="submit"
                     className="w-full gradient-hero shadow-soft"
-                    disabled={isLoading}
+                    disabled={registerMutation.isPending}
                   >
-                    {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
-                  </Button> */}
+                    {registerMutation.isPending
+                      ? "Creando cuenta..."
+                      : "Crear Cuenta"}
+                  </Button>
 
                   <div className="relative">
                     <div className="absolute inset-0 flex items-center">
@@ -222,12 +289,12 @@ export const AuthPage = () => {
                     </div>
                   </div>
 
-                  {/* <Button
+                  <Button
                     type="button"
                     variant="outline"
                     className="w-full"
                     onClick={handleGoogleLogin}
-                    disabled={isLoading}
+                    disabled={registerMutation.isPending}
                   >
                     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                       <path
@@ -248,7 +315,7 @@ export const AuthPage = () => {
                       />
                     </svg>
                     Google
-                  </Button> */}
+                  </Button>
                 </form>
               </TabsContent>
             </Tabs>
