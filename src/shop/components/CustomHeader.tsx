@@ -99,7 +99,7 @@ export const CustomHeader = () => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const user = useAuthStore((state) => state.user);
-  const onLogout = useAuthStore((state) => state.logout);
+  const logout = useAuthStore((state) => state.logout);
 
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
@@ -185,8 +185,7 @@ export const CustomHeader = () => {
   };
 
   const handleLogout = async () => {
-    onLogout();
-    localStorage.removeItem("token");
+    logout();
     navigate("/");
   };
 

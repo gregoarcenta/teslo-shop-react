@@ -12,11 +12,9 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-
-import { toast } from "sonner";
-import { loginAction } from "@/auth/actions/login.action";
 import { useMutation } from "@tanstack/react-query";
 import { useAuthStore } from "@/auth/store/auth.store";
+import { toast } from "sonner";
 
 export const AuthPage = () => {
   const navigate = useNavigate();
@@ -24,13 +22,11 @@ export const AuthPage = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
 
-  const onLogin = useAuthStore((state) => state.login);
+  const login = useAuthStore((state) => state.login);
 
   const loginMutation = useMutation({
-    mutationFn: loginAction,
-    onSuccess: (data) => {
-      onLogin(data.user);
-      localStorage.setItem("token", data.accessToken);
+    mutationFn: login,
+    onSuccess: () => {
       toast.success("¡Inicio de sesión exitoso!");
       navigate("/");
     },
