@@ -14,7 +14,7 @@ const CustomProductSortSelect = () => {
 
   return (
     <div className="flex items-center gap-4">
-      <Label className="text-sm">Ordenar por:</Label>
+      <Label className="text-sm hidden md:block">Ordenar por:</Label>
       <Select value={sortBy} onValueChange={handleSortChange}>
         <SelectTrigger className="w-40">
           <SelectValue placeholder="Seleccionar" />
