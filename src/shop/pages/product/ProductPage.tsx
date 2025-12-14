@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getProductAction } from "@/shop/actions/get-product.action";
 import { useFavoriteToggle } from "@/shop/hooks/useFavoriteToggle";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -25,6 +26,7 @@ export const ProductPage = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
+  const authStore = useAuthStore((state) => state.authStatus);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", idSlug],
@@ -38,6 +40,14 @@ export const ProductPage = () => {
 
   const handleFavoriteClick = () => {
     if (!product || isPending) return;
+
+    if (authStore === "not-authenticated") {
+      toast.info("Debes iniciar sesión para gestionar favoritos", {
+        description: "Inicia sesión o crea una cuenta para continuar",
+        richColors: true
+      });
+      return;
+    }
 
     setIsAnimatingHeart(true);
     setTimeout(() => setIsAnimatingHeart(false), 600);

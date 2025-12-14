@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Link } from "react-router";
 import type { Product } from "@/types/product.interface";
 import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -21,11 +22,21 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
   const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
   const [isAnimatingCart, setIsAnimatingCart] = useState(false);
 
+  const authStore = useAuthStore((state) => state.authStatus);
+
   const { isPending: isPendingFavorite, mutate: toggleFavorite } =
     useFavoriteToggle(product);
 
   const handleFavoriteClick = () => {
     if (isPendingFavorite) return;
+
+    if (authStore === "not-authenticated") {
+      toast.info("Debes iniciar sesión para gestionar favoritos", {
+        description: "Inicia sesión o crea una cuenta para continuar",
+        richColors: true
+      });
+      return;
+    }
 
     setIsAnimatingHeart(true);
     setTimeout(() => setIsAnimatingHeart(false), 600);

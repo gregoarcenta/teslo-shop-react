@@ -10,7 +10,6 @@ export const useFavoriteToggle = (product: Product) => {
 
   return useMutation({
     mutationFn: (productId: string) => toggleFavoriteAction(productId),
-
     onMutate: async (productId) => {
       const productsKey = ["products"];
       const favoritesKey = ["favorites"];
@@ -74,19 +73,17 @@ export const useFavoriteToggle = (product: Product) => {
 
       return { previousProducts, previousFavorites, previousProduct };
     },
-
     onSuccess: (response) => {
       const successMessage = response.includes("added")
         ? `${product.title} fue agregado a favoritos`
         : `${product.title} fue eliminado de favoritos`;
 
-      toast.success(successMessage);
+      toast.success(successMessage, { richColors: true });
 
       queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
       queryClient.invalidateQueries({ queryKey: ["product"], exact: false });
       queryClient.invalidateQueries({ queryKey: ["favorites"], exact: false });
     },
-
     onError: (error, _, context) => {
       if (context?.previousProducts) {
         context.previousProducts.forEach(([queryKey, data]) => {
