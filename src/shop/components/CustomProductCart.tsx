@@ -6,10 +6,11 @@ import {
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-
 import { toast } from "sonner";
 import { Link } from "react-router";
 import type { Product } from "@/types/product.interface";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toggleFavoriteAction } from "../actions/toggle-favorite.action";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -21,15 +22,102 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
   const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
   const [isAnimatingCart, setIsAnimatingCart] = useState(false);
 
+  const queryClient = useQueryClient();
+
+  const favoriteMutation = useMutation({
+    mutationFn: (productId: string) => toggleFavoriteAction(productId),
+    //Optimistic Update
+    onMutate: async (productId: string) => {
+      const productsKey = ["products"];
+      const favoritesKey = ["favorites"];
+
+      // Cancelar todas las queries de productos
+      await queryClient.cancelQueries({ queryKey: productsKey, exact: false });
+      await queryClient.cancelQueries({ queryKey: favoritesKey, exact: false });
+
+      // Guardar data anterior
+      const previousProducts = queryClient.getQueriesData({
+        queryKey: productsKey,
+        exact: false
+      });
+      const previousFavorites = queryClient.getQueryData(favoritesKey);
+
+      // Actualizar query de productos
+      queryClient.setQueriesData(
+        { queryKey: productsKey, exact: false },
+        (old: any) => {
+          // Si la query devuelve un objeto con productos
+          if (old?.products && Array.isArray(old.products)) {
+            return {
+              ...old,
+              products: old.products.map((p: any) =>
+                p.id === productId ? { ...p, isLiked: !p.isLiked } : p
+              )
+            };
+          }
+
+          // Si la query devuelve directamente un array
+          if (Array.isArray(old)) {
+            return old.map((p: any) =>
+              p.id === productId ? { ...p, isLiked: !p.isLiked } : p
+            );
+          }
+
+          return old;
+        }
+      );
+
+      // Actualizar query de favoritos
+      queryClient.setQueryData(favoritesKey, (old: any) => {
+        if (!Array.isArray(old)) return old;
+
+        const exists = old.some((p: any) => p.id === productId);
+
+        if (exists) {
+          // Quitar de favoritos
+          return old.filter((p: any) => p.id !== productId);
+        } else {
+          // Agregar a favoritos
+          return [...old, { ...product, isLiked: true }];
+        }
+      });
+
+      return { previousProducts, previousFavorites };
+    },
+    onSuccess: (response) => {
+      const successMessage = response.includes("added")
+        ? `${product.title} fue agregado a favoritos`
+        : `${product.title} fue eliminado de favoritos`;
+
+      toast.success(successMessage);
+
+      // Invalidar queries relacionadas para refrescar datos
+      queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["favorites"], exact: false });
+    },
+    onError: (error, _, context) => {
+      // Revertir productos
+      if (context?.previousProducts) {
+        context.previousProducts.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      // Revertir favoritos
+      if (context?.previousFavorites) {
+        queryClient.setQueryData(["favorites"], context.previousFavorites);
+      }
+      toast.error("Error al actualizar favoritos");
+      console.error("Favorite mutation error:", error);
+    }
+  });
+
   const handleFavoriteClick = () => {
-    // setIsFavorite(!isFavorite);
+    if (favoriteMutation.isPending) return;
+
     setIsAnimatingHeart(true);
     setTimeout(() => setIsAnimatingHeart(false), 600);
-    toast(product.isLiked ? "Eliminado de favoritos" : "Agregado a favoritos", {
-      description: product.isLiked
-        ? `${product.title} fue eliminado de tus favoritos`
-        : `${product.title} fue agregado a tus favoritos`
-    });
+
+    favoriteMutation.mutate(product.id);
   };
 
   const handleAddToCart = () => {

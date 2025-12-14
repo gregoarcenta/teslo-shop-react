@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { toast } from "sonner";
 import type { AxiosError } from "axios";
@@ -22,6 +22,7 @@ export const AuthPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const queryClient = useQueryClient();
 
   const login = useAuthStore((state) => state.login);
   const register = useAuthStore((state) => state.register);
@@ -30,6 +31,7 @@ export const AuthPage = () => {
     mutationFn: login,
     onSuccess: () => {
       toast.info("¡Inicio de sesión exitoso!", { richColors: true });
+      queryClient.clear();
       navigate("/");
     },
     onError: (_) =>

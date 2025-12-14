@@ -1,24 +1,20 @@
-import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { EmptyState } from "@/components/custom/EmptyState";
 import { CustomProductCard } from "@/shop/components/CustomProductCart";
-import { CustomProductGridSkeleton } from "@/shop/components/CustomProductGridSkeleton";
-import type { Product } from "@/types/product.interface";
+import { CustomProductCardSkeleton } from "@/shop/components/CustomProductGridSkeleton";
+import { useQuery } from "@tanstack/react-query";
+import { getFavoritesAction } from "@/shop/actions/get-favorites.action";
 
 // Mock favorites
-const mockFavorites: Product[] = [];
 
 export function FavoritesPage() {
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: favorites = [], isLoading } = useQuery({
+    queryKey: ["favorites"],
+    queryFn: getFavoritesAction,
+    staleTime: 1000 * 60 * 5 // 5 minutes
+  });
 
-  useEffect(() => {
-    // Simular carga de favoritos
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  // isLoading = true;
 
   if (isLoading) {
     return (
@@ -26,7 +22,11 @@ export function FavoritesPage() {
         <h1 className="text-4xl font-bold mb-8 font-montserrat">
           Mis Favoritos
         </h1>
-        <CustomProductGridSkeleton count={4} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <CustomProductCardSkeleton key={i} />
+          ))}
+        </div>
       </div>
     );
   }
@@ -35,7 +35,7 @@ export function FavoritesPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8 font-montserrat">Mis Favoritos</h1>
 
-      {mockFavorites.length === 0 ? (
+      {favorites.length === 0 ? (
         <EmptyState
           icon={Heart}
           title="No tienes productos favoritos aún"
@@ -45,7 +45,7 @@ export function FavoritesPage() {
         />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
-          {mockFavorites.map((product) => (
+          {favorites.map((product) => (
             <CustomProductCard key={product.id} product={product} />
           ))}
         </div>

@@ -28,6 +28,7 @@ import CustomLogo from "@/components/custom/CustomLogo";
 import { useAuthStore } from "@/auth/store/auth.store";
 import { useDebounce } from "use-debounce";
 import { useSearchProducts } from "../hooks/useSearchProducts";
+import { useQueryClient } from "@tanstack/react-query";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -55,6 +56,8 @@ export const CustomHeader = () => {
 
   const isActive = (path: string) => location.pathname === path;
   const isSearchOpen = searchQuery.trim().length > 1;
+
+  const queryClient = useQueryClient();
 
   // Reset selected index when products change
   useEffect(() => {
@@ -123,6 +126,7 @@ export const CustomHeader = () => {
 
   const handleLogout = () => {
     logout();
+    queryClient.clear();
     navigate("/auth");
   };
 
