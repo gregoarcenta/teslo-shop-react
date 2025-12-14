@@ -14,11 +14,14 @@ import { Link, Navigate, useParams } from "react-router";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getProductAction } from "@/shop/actions/get-product.action";
+import { useFavoriteToggle } from "@/shop/hooks/useFavoriteToggle";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
 export const ProductPage = () => {
   const { idSlug } = useParams();
+  const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
+  // const [isAnimatingCart, setIsAnimatingCart] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -27,8 +30,20 @@ export const ProductPage = () => {
     queryKey: ["product", idSlug],
     queryFn: () => getProductAction(idSlug!),
     staleTime: 1000 * 60 * 5,
+    enabled: !!idSlug,
     retry: false
   });
+
+  const { isPending, mutate: toggleFavorite } = useFavoriteToggle(product!);
+
+  const handleFavoriteClick = () => {
+    if (!product || isPending) return;
+
+    setIsAnimatingHeart(true);
+    setTimeout(() => setIsAnimatingHeart(false), 600);
+
+    toggleFavorite(product.id);
+  };
 
   const handleAddToCart = () => {
     if (!selectedSize) {
@@ -102,12 +117,6 @@ export const ProductPage = () => {
   if (!product) {
     return <Navigate to="/products" />;
   }
-
-  // if (!product.images || product.images.length === 0) {
-  //   product.images = [
-  //     "https://via.placeholder.com/600x600?text=No+Image+Available"
-  //   ];
-  // }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -237,6 +246,7 @@ export const ProductPage = () => {
 
           {/* Actions */}
           <div className="flex gap-3">
+            {/* Add to Cart button */}
             <Button
               size="lg"
               className="flex-1 gradient-hero shadow-glow"
@@ -245,15 +255,14 @@ export const ProductPage = () => {
               <ShoppingBag className="mr-2 h-5 w-5" />
               Agregar al Carrito
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              // onClick={() => setIsFavorite(!isFavorite)}
-            >
+            {/* Favorite button */}
+            <Button variant="outline" size="lg" onClick={handleFavoriteClick}>
               <Heart
-                className={`h-5 w-5 ${
-                  product.isLiked ? "fill-destructive text-destructive" : ""
-                }`}
+                className={`h-5 w-5 transition-all ${
+                  product.isLiked
+                    ? "fill-destructive text-destructive"
+                    : "text-muted-foreground"
+                } ${isAnimatingHeart ? "animate-heart-like" : ""}`}
               />
             </Button>
           </div>
