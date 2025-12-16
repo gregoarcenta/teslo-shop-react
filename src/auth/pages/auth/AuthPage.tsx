@@ -31,7 +31,8 @@ export const AuthPage = () => {
     mutationFn: login,
     onSuccess: () => {
       toast.info("¡Inicio de sesión exitoso!", { richColors: true });
-      queryClient.clear();
+      queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
       navigate("/");
     },
     onError: (_) =>
@@ -45,6 +46,8 @@ export const AuthPage = () => {
     mutationFn: register,
     onSuccess: () => {
       toast.success("¡Cuenta creada exitosamente!");
+      queryClient.invalidateQueries({ queryKey: ["products"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["cart"] });
       navigate("/");
     },
     onError: (error: AxiosError<{ message: string[] }>) => {

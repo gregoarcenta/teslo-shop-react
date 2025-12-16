@@ -6,8 +6,6 @@ import type { Product } from "@/types/product.interface";
 export const useFavoriteToggle = (product: Product) => {
   const queryClient = useQueryClient();
 
-  //   console.log(product);
-
   return useMutation({
     mutationFn: (productId: string) => toggleFavoriteAction(productId),
     onMutate: async (productId) => {

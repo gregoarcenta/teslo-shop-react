@@ -8,24 +8,23 @@ import {
 } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useAuthStore } from "./auth/store/auth.store";
-import { useEffect } from "react";
 
 const queryClient = new QueryClient();
 
 const CheckAuthProvider = ({ children }: { children: React.ReactNode }) => {
   const checkAuthStatus = useAuthStore((state) => state.checkAuthStatus);
+  const logout = useAuthStore((state) => state.logout);
+  const authStatus = useAuthStore((state) => state.authStatus);
 
-  useEffect(() => {
-    if (!localStorage.getItem("teslo-access-token")) {
-      checkAuthStatus();
-    }
-  }, []);
+  const token = localStorage.getItem("teslo-access-token");
+
+  if (!token) logout();
 
   const { isLoading } = useQuery({
     queryKey: ["auth"],
     queryFn: checkAuthStatus,
     retry: false,
-    enabled: !!localStorage.getItem("teslo-access-token"),
+    enabled: !!token && authStatus === "checking",
     refetchInterval: 1000 * 60 * 1.5 // 1.5 minutes
   });
 

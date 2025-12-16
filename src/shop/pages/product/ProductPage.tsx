@@ -2,31 +2,20 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Heart,
-  ShoppingBag,
-  Truck,
-  Shield,
-  RefreshCw,
-  ChevronLeft
-} from "lucide-react";
+import { Truck, Shield, RefreshCw, ChevronLeft } from "lucide-react";
 import { Link, Navigate, useParams } from "react-router";
-import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { getProductAction } from "@/shop/actions/get-product.action";
-import { useFavoriteToggle } from "@/shop/hooks/useFavoriteToggle";
-import { useAuthStore } from "@/auth/store/auth.store";
+import { AddToCartButton } from "@/shop/components/CustomBtnAddProduct";
+import { FavoriteButton } from "@/shop/components/CustomFavoriteButtom";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
 export const ProductPage = () => {
   const { idSlug } = useParams();
-  const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
-  // const [isAnimatingCart, setIsAnimatingCart] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const authStore = useAuthStore((state) => state.authStatus);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", idSlug],
@@ -35,33 +24,6 @@ export const ProductPage = () => {
     enabled: !!idSlug,
     retry: false
   });
-
-  const { isPending, mutate: toggleFavorite } = useFavoriteToggle(product!);
-
-  const handleFavoriteClick = () => {
-    if (!product || isPending) return;
-
-    if (authStore === "not-authenticated") {
-      toast.info("Debes iniciar sesión para gestionar favoritos", {
-        description: "Inicia sesión o crea una cuenta para continuar",
-        richColors: true
-      });
-      return;
-    }
-
-    setIsAnimatingHeart(true);
-    setTimeout(() => setIsAnimatingHeart(false), 600);
-
-    toggleFavorite(product.id);
-  };
-
-  const handleAddToCart = () => {
-    if (!selectedSize) {
-      toast.error("Por favor selecciona una talla");
-      return;
-    }
-    toast.success("Producto agregado al carrito");
-  };
 
   if (isLoading) {
     return (
@@ -257,24 +219,21 @@ export const ProductPage = () => {
           {/* Actions */}
           <div className="flex gap-3">
             {/* Add to Cart button */}
-            <Button
+            <AddToCartButton
+              product={product}
               size="lg"
               className="flex-1 gradient-hero shadow-glow"
-              onClick={handleAddToCart}
             >
-              <ShoppingBag className="mr-2 h-5 w-5" />
               Agregar al Carrito
-            </Button>
+            </AddToCartButton>
             {/* Favorite button */}
-            <Button variant="outline" size="lg" onClick={handleFavoriteClick}>
-              <Heart
-                className={`h-5 w-5 transition-all ${
-                  product.isLiked
-                    ? "fill-destructive text-destructive"
-                    : "text-muted-foreground"
-                } ${isAnimatingHeart ? "animate-heart-like" : ""}`}
-              />
-            </Button>
+            <FavoriteButton
+              product={product}
+              variant="page"
+              size="lg"
+              className="bg-primary/5
+              "
+            />
           </div>
 
           {/* Features */}

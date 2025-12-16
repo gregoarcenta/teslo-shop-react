@@ -13,6 +13,7 @@ type AuthState = {
   // State
   user: User | null;
   authStatus: AuthSatus;
+  cartId: string | null;
   // Getters
   isAdminAccess: () => boolean;
   // Actions
@@ -25,52 +26,46 @@ type AuthState = {
 export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   authStatus: "checking",
+  cartId: null,
   isAdminAccess: () => {
     const userRoles = get().user?.roles || [];
     return userRoles.includes("admin") || userRoles.includes("tester");
   },
   login: async (loginData) => {
     try {
-      const { user, accessToken } = await loginAction(loginData);
+      const { user, accessToken, cartId } = await loginAction(loginData);
       localStorage.setItem("teslo-access-token", accessToken);
-      set({ user: user, authStatus: "authenticated" });
+      set({ user, authStatus: "authenticated", cartId });
     } catch (error) {
       localStorage.removeItem("teslo-access-token");
-      set({ user: null, authStatus: "not-authenticated" });
+      set({ user: null, authStatus: "not-authenticated", cartId: null });
       throw error;
     }
   },
   logout: () => {
     localStorage.removeItem("teslo-access-token");
-    set({ user: null, authStatus: "not-authenticated" });
+    set({ user: null, authStatus: "not-authenticated", cartId: null });
   },
   checkAuthStatus: async () => {
-    const token = localStorage.getItem("teslo-access-token");
-
-    if (!token) {
-      set({ user: null, authStatus: "not-authenticated" });
-      return { user: null };
-    }
-
     try {
-      const { user, accessToken } = await checkStatusAction();
+      const { user, accessToken, cartId } = await checkStatusAction();
       localStorage.setItem("teslo-access-token", accessToken);
-      set({ user: user, authStatus: "authenticated" });
+      set({ user: user, authStatus: "authenticated", cartId });
       return { user };
     } catch (error) {
       localStorage.removeItem("teslo-access-token");
-      set({ user: null, authStatus: "not-authenticated" });
+      set({ user: null, authStatus: "not-authenticated", cartId: null });
       throw error;
     }
   },
   register: async (registerData) => {
     try {
-      const { user, accessToken } = await registerAction(registerData);
+      const { user, accessToken, cartId } = await registerAction(registerData);
       localStorage.setItem("teslo-access-token", accessToken);
-      set({ user: user, authStatus: "authenticated" });
+      set({ user: user, authStatus: "authenticated", cartId });
     } catch (error) {
       localStorage.removeItem("teslo-access-token");
-      set({ user: null, authStatus: "not-authenticated" });
+      set({ user: null, authStatus: "not-authenticated", cartId: null });
       throw error;
     }
   }

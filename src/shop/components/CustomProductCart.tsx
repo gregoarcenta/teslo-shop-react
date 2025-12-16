@@ -1,16 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Heart, ShoppingBag } from "lucide-react";
-import { useState } from "react";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from "@/components/ui/tooltip";
-import { toast } from "sonner";
 import { Link } from "react-router";
 import type { Product } from "@/types/product.interface";
-import { useFavoriteToggle } from "../hooks/useFavoriteToggle";
-import { useAuthStore } from "@/auth/store/auth.store";
+import { AddToCartButton } from "./CustomBtnAddProduct";
+import { FavoriteButton } from "./CustomFavoriteButtom";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -19,40 +15,6 @@ interface ProductCardProps {
 }
 
 export const CustomProductCard = ({ product }: ProductCardProps) => {
-  const [isAnimatingHeart, setIsAnimatingHeart] = useState(false);
-  const [isAnimatingCart, setIsAnimatingCart] = useState(false);
-
-  const authStore = useAuthStore((state) => state.authStatus);
-
-  const { isPending: isPendingFavorite, mutate: toggleFavorite } =
-    useFavoriteToggle(product);
-
-  const handleFavoriteClick = () => {
-    if (isPendingFavorite) return;
-
-    if (authStore === "not-authenticated") {
-      toast.info("Debes iniciar sesión para gestionar favoritos", {
-        description: "Inicia sesión o crea una cuenta para continuar",
-        richColors: true
-      });
-      return;
-    }
-
-    setIsAnimatingHeart(true);
-    setTimeout(() => setIsAnimatingHeart(false), 600);
-
-    toggleFavorite(product.id);
-  };
-
-  const handleAddToCart = () => {
-    setIsAnimatingCart(true);
-    setTimeout(() => setIsAnimatingCart(false), 600);
-
-    toast("Producto agregado", {
-      description: `${product.title} fue agregado a tu carrito`
-    });
-  };
-
   return (
     <div className="group relative bg-card rounded-lg overflow-hidden shadow-soft hover:shadow-medium transition-all duration-300">
       <Link to={`/product/${product.slug}`}>
@@ -73,20 +35,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
       {/* Favorite Button */}
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-2 right-2 bg-card/90 backdrop-blur-sm hover:bg-primary/10 hover:scale-110 shadow-soft border border-border/50 transition-all duration-200"
-            onClick={handleFavoriteClick}
-          >
-            <Heart
-              className={`h-5 w-5 transition-all ${
-                product.isLiked
-                  ? "fill-destructive text-destructive"
-                  : "text-muted-foreground"
-              } ${isAnimatingHeart ? "animate-heart-like" : ""}`}
-            />
-          </Button>
+          <FavoriteButton product={product} variant="card" />
         </TooltipTrigger>
         <TooltipContent>
           <p>
@@ -112,18 +61,7 @@ export const CustomProductCard = ({ product }: ProductCardProps) => {
           </span>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                size="sm"
-                className="gradient-hero shadow-soft"
-                onClick={handleAddToCart}
-              >
-                <ShoppingBag
-                  className={`h-4 w-4 mr-1 transition-all ${
-                    isAnimatingCart ? "animate-cart-bounce" : ""
-                  }`}
-                />
-                Agregar
-              </Button>
+              <AddToCartButton product={product}></AddToCartButton>
             </TooltipTrigger>
             <TooltipContent>
               <p>Agregar al carrito</p>
