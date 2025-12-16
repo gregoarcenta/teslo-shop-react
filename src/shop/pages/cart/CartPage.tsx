@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCart } from "@/shop/hooks/useCart";
-import { useDeleteFromCart } from "@/shop/hooks/useDeletetoCart";
+import { useDeleteFromCart } from "@/shop/hooks/useDeleteFromCart";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { Activity } from "react";
 import { Link } from "react-router";
@@ -12,15 +12,12 @@ import { Link } from "react-router";
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
 export const CartPage = () => {
-  const { isFetching, data: cart, isError } = useCart();
+  const { isLoading, isFetching, data: cart, isError } = useCart();
 
-  const {
-    mutate: deleteFromCart,
-    isPending: isDeletingFromCart,
-    variables
-  } = useDeleteFromCart();
+  const { mutate: deleteFromCart, isPending: isDeletingFromCart } =
+    useDeleteFromCart();
 
-  if (isFetching) {
+  if (isLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
         <h1 className="text-4xl font-bold mb-8">Carrito de Compras</h1>
@@ -117,16 +114,8 @@ export const CartPage = () => {
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => {
-              const isDeleting =
-                isDeletingFromCart && variables?.productId === item.product.id;
-
               return (
-                <Card
-                  key={item.id}
-                  className={`p-4 ${
-                    isDeleting ? "opacity-50 pointer-events-none" : ""
-                  }`}
-                >
+                <Card key={item.id} className={`p-4`}>
                   <div className="flex gap-4">
                     <img
                       src={IMAGE_BASE_URL + item.product.images[0]}
@@ -193,15 +182,9 @@ export const CartPage = () => {
                         size="sm"
                         className="text-destructive"
                         onClick={() => handleDeleteFromCart(item.product.id)}
-                        disabled={isDeleting}
+                        // disabled={isDeleting}
                       >
-                        {isDeleting ? (
-                          <span className="flex items-center gap-2">
-                            Eliminando...
-                          </span>
-                        ) : (
-                          <Trash2 className="h-4 w-4" />
-                        )}
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -241,7 +224,12 @@ export const CartPage = () => {
               <Button
                 className="w-full mt-6 gradient-hero shadow-glow"
                 size="lg"
-                disabled={isDeletingFromCart}
+                disabled={
+                  cartItems.length === 0 ||
+                  isDeletingFromCart ||
+                  isLoading ||
+                  isFetching
+                }
               >
                 Proceder al Pago
               </Button>

@@ -68,7 +68,7 @@ export const AddToCartButton = ({
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 600);
 
-    addToCart({ productId: product.id, cartId: cart.id });
+    addToCart({ product, cartId: cart.id });
   };
 
   return (
