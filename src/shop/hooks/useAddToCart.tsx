@@ -64,7 +64,7 @@ export const useAddToCart = () => {
         `Añadido ${cartItem.quantity} x ${cartItem.product.title}`,
         { id: "add-to-cart" }
       );
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
+      // queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
 
     onError: (_, __, context) => {

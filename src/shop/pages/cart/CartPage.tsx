@@ -3,19 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import CustomCardItem from "@/shop/components/CustomCardItem";
 import { useCart } from "@/shop/hooks/useCart";
 import { useDeleteFromCart } from "@/shop/hooks/useDeleteFromCart";
-import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { useUpdateCart } from "@/shop/hooks/useUpdateCart";
+import { ShoppingBag } from "lucide-react";
 import { Activity } from "react";
 import { Link } from "react-router";
 
-const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
-
 export const CartPage = () => {
-  const { isLoading, isFetching, data: cart, isError } = useCart();
-
+  const { isLoading, data: cart, isError } = useCart();
   const { mutate: deleteFromCart, isPending: isDeletingFromCart } =
     useDeleteFromCart();
+  const { mutate: updateQuantity, isPending: isUpdatingCart } = useUpdateCart();
 
   if (isLoading) {
     return (
@@ -87,10 +87,6 @@ export const CartPage = () => {
   const shipping = subtotal > 50 ? 0 : 5.99;
   const total = subtotal + shipping;
 
-  const handleDeleteFromCart = (productId: string) => {
-    deleteFromCart({ productId, cartId: cart.id });
-  };
-
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8 font-montserrat">
@@ -115,80 +111,14 @@ export const CartPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => {
               return (
-                <Card key={item.id} className={`p-4`}>
-                  <div className="flex gap-4">
-                    <img
-                      src={IMAGE_BASE_URL + item.product.images[0]}
-                      alt={item.product.title}
-                      crossOrigin="anonymous"
-                      className="w-24 h-24 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-lg">
-                        {item.product.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {item.product.gender === "men"
-                          ? "Hombre"
-                          : item.product.gender === "women"
-                          ? "Mujer"
-                          : item.product.gender === "kid"
-                          ? "Niño/a"
-                          : "Unisex"}
-                      </p>
-                      <Activity
-                        mode={
-                          item.product.stock < 5 && item.product.stock > 0
-                            ? "visible"
-                            : "hidden"
-                        }
-                      >
-                        <p className="text-xs text-accent mb-2">
-                          ¡Solo quedan {item.product.stock} en stock!
-                        </p>
-                      </Activity>
-                      <Activity
-                        mode={item.product.stock === 0 ? "visible" : "hidden"}
-                      >
-                        <p className="text-xs text-destructive mb-2">Agotado</p>
-                      </Activity>
-                      <div className="flex items-center gap-3 mb-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="font-semibold">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="text-right space-y-2">
-                      <p className="text-lg font-bold bg-linear-to-r from-primary to-primary-glow bg-clip-text text-transparent">
-                        $
-                        {(Number(item.product.price) * item.quantity).toFixed(
-                          2
-                        )}
-                      </p>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                        onClick={() => handleDeleteFromCart(item.product.id)}
-                        // disabled={isDeleting}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
+                <CustomCardItem
+                  key={item.id}
+                  cartItem={item}
+                  onDelete={deleteFromCart}
+                  onUpdate={updateQuantity}
+                  isDeleting={isDeletingFromCart}
+                  isUpdating={isUpdatingCart}
+                />
               );
             })}
           </div>
@@ -225,13 +155,14 @@ export const CartPage = () => {
                 className="w-full mt-6 gradient-hero shadow-glow"
                 size="lg"
                 disabled={
-                  cartItems.length === 0 ||
-                  isDeletingFromCart ||
-                  isLoading ||
-                  isFetching
+                  cartItems.length === 0 || isDeletingFromCart || isUpdatingCart
                 }
               >
-                Proceder al Pago
+                {isDeletingFromCart || isUpdatingCart ? (
+                  <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+                ) : (
+                  "Proceder al Pago"
+                )}
               </Button>
               <Button variant="outline" className="w-full mt-2" asChild>
                 <Link to="/products">Continuar Comprando</Link>

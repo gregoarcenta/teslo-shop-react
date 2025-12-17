@@ -44,7 +44,6 @@ export const useDeleteFromCart = () => {
     },
     onSuccess: (_) => {
       toast.success("Producto eliminado", { id: "delete-cart" });
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
     },
     onError: (_, __, context) => {
       if (context?.previousCart) {

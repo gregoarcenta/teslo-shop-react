@@ -1,7 +1,7 @@
 import { tesloApi } from "@/api/teslo-api";
 import type { ApiResponse } from "@/types/api-response";
 
-interface AddToCartPayload {
+export interface DeleteFromCartPayload {
   productId: string;
   cartId: string;
 }
@@ -9,7 +9,7 @@ interface AddToCartPayload {
 export const deleteFromCartAction = async ({
   productId,
   cartId
-}: AddToCartPayload) => {
+}: DeleteFromCartPayload) => {
   const { data } = await tesloApi.delete<ApiResponse<null>>(`/cart/item`, {
     data: {
       productId,
