@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import type { Product } from "@/types/product.interface";
 import { useCart } from "../hooks/useCart";
 import { useAddToCart } from "../hooks/useAddToCart";
+import { useUpdateCart } from "../hooks/useUpdateCart";
 
 interface AddToCartButtonProps {
   product: Product;
+  quantity?: number;
   size?: "sm" | "lg" | "default";
   className?: string;
   children?: React.ReactNode;
@@ -17,6 +19,7 @@ interface AddToCartButtonProps {
 
 export const AddToCartButton = ({
   product,
+  quantity = 1,
   size = "sm",
   className = "gradient-hero shadow-soft",
   children
@@ -25,9 +28,10 @@ export const AddToCartButton = ({
   const authStatus = useAuthStore((state) => state.authStatus);
   const { data: cart } = useCart();
   const { mutate: addToCart, isPending } = useAddToCart();
+  const { mutate: updateQuantity, isPending: isUpdatingCart } = useUpdateCart();
 
   const handleClick = () => {
-    if (isPending) return;
+    if (isPending || isUpdatingCart) return;
 
     if (authStatus === "not-authenticated") {
       toast.info("Debes iniciar sesión para agregar productos al carrito", {
@@ -57,7 +61,10 @@ export const AddToCartButton = ({
     const cartItem = cart.cartItems.find(
       (item) => item.product.id === product.id
     );
-    if (cartItem && cartItem.quantity >= product.stock) {
+
+    const totalQuantity = (cartItem?.quantity || 0) + quantity;
+
+    if (totalQuantity > product.stock) {
       toast.error(
         `No se pudo agregar al carrito. Solo quedan ${product.stock} unidades disponibles.`,
         { richColors: true }
@@ -68,7 +75,18 @@ export const AddToCartButton = ({
     setIsAnimating(true);
     setTimeout(() => setIsAnimating(false), 600);
 
-    addToCart({ product, cartId: cart.id });
+    if (quantity > 1) {
+      updateQuantity({
+        cartId: cart.id,
+        product,
+        quantity: totalQuantity
+      });
+      toast.success(`Se han agregado ${quantity} unidades al carrito.`, {
+        richColors: true
+      });
+    } else {
+      addToCart({ product, cartId: cart.id });
+    }
   };
 
   return (
@@ -76,7 +94,7 @@ export const AddToCartButton = ({
       size={size}
       className={className}
       onClick={handleClick}
-      disabled={isPending || product.stock === 0}
+      disabled={isPending || isUpdatingCart || product.stock === 0}
     >
       <ShoppingBag
         className={`h-4 w-4 mr-${children ? "2" : "1"} transition-all ${

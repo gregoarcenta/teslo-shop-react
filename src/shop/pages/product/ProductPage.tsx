@@ -15,7 +15,7 @@ export const ProductPage = () => {
   const { idSlug } = useParams();
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState("");
-  const [quantity, setQuantity] = useState(1);
+  // const [quantity, setQuantity] = useState(1);
 
   const { data: product, isLoading } = useQuery({
     queryKey: ["product", idSlug],
@@ -189,9 +189,9 @@ export const ProductPage = () => {
 
           {/* Quantity */}
           <div className="space-y-3">
-            <label className="text-sm font-semibold">Cantidad:</label>
+            {/* <label className="text-sm font-semibold">Cantidad:</label> */}
             <div className="flex items-center gap-3">
-              <Button
+              {/* <Button
                 variant="outline"
                 size="icon"
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
@@ -209,7 +209,7 @@ export const ProductPage = () => {
                 }
               >
                 +
-              </Button>
+              </Button> */}
               <span className="text-sm text-muted-foreground ml-2">
                 ({product.stock} disponibles)
               </span>
