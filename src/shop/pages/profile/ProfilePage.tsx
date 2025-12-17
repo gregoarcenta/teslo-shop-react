@@ -22,6 +22,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
+import { useAuthStore } from "@/auth/store/auth.store";
 
 // Tipo de datos que coincide con la respuesta del backend
 type OrderItem = {
@@ -132,6 +133,8 @@ const statusLabels: Record<string, string> = {
 export const ProfilePage = () => {
   const [openOrders, setOpenOrders] = useState<string[]>([]);
   const [isLoadingOrders, setIsLoadingOrders] = useState(true);
+
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     // Simular carga de órdenes
@@ -351,27 +354,24 @@ export const ProfilePage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">Nombre</Label>
-                    <Input id="firstName" placeholder="Juan" />
+                    <Input id="firstName" placeholder={user?.fullName} />
                   </div>
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <Label htmlFor="lastName">Apellido</Label>
                     <Input id="lastName" placeholder="Pérez" />
+                  </div> */}
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" placeholder={user?.email} />
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="juan@email.com" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Teléfono</Label>
-                  <Input id="phone" type="tel" placeholder="+34 600 000 000" />
+                  <Input id="phone" type="tel" placeholder="" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="address">Dirección</Label>
-                  <Input
-                    id="address"
-                    placeholder="Calle Principal 123, Ciudad"
-                  />
+                  <Input id="address" placeholder="" />
                 </div>
                 <Button className="gradient-hero">Guardar Cambios</Button>
               </form>

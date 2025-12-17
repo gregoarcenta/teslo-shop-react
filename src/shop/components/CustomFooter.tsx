@@ -23,7 +23,7 @@ export const CustomFooter = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/products?type=men"
+                  to="/products/men"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Hombres
@@ -31,7 +31,7 @@ export const CustomFooter = () => {
               </li>
               <li>
                 <Link
-                  to="/products?type=women"
+                  to="/products/women"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Mujeres
@@ -39,7 +39,7 @@ export const CustomFooter = () => {
               </li>
               <li>
                 <Link
-                  to="/products?type=kids"
+                  to="/products/kids"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Niños
@@ -62,7 +62,7 @@ export const CustomFooter = () => {
               </li>
               <li>
                 <Link
-                  to="/profile/orders"
+                  to="/profile"
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Mis Pedidos
