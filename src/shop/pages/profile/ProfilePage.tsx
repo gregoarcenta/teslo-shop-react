@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+
 import {
   User,
   Package,
@@ -16,107 +18,15 @@ import {
   XCircle,
   Clock
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Activity, useState } from "react";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger
 } from "@/components/ui/collapsible";
 import { useAuthStore } from "@/auth/store/auth.store";
-
-// Tipo de datos que coincide con la respuesta del backend
-type OrderItem = {
-  id: string;
-  quantity: number;
-  price: string;
-  product: {
-    id: string;
-    title: string;
-  };
-};
-
-type Order = {
-  id: string;
-  totalAmount: string;
-  totalItems: number;
-  status: string;
-  paid: boolean;
-  paidAt: string;
-  createdAt: string;
-  items: OrderItem[];
-};
-
-const mockOrders: Order[] = [
-  {
-    id: "9b12083a-5fe9-403b-80f9-6906adee303e",
-    totalAmount: "10.00",
-    totalItems: 1,
-    status: "pending",
-    paid: false,
-    paidAt: "2024-11-08T22:51:11.862Z",
-    createdAt: "2024-11-08T22:51:11.862Z",
-    items: [
-      {
-        id: "9b12083a-5fe9-403b-80f9-6906adee303e",
-        quantity: 2,
-        price: "10.99",
-        product: {
-          id: "a147db81-1eab-462e-9dd9-c086131c191f",
-          title: "Camiseta Teslo"
-        }
-      }
-    ]
-  },
-  {
-    id: "8c23194b-6gfa-514c-91ga-7017beef403f",
-    totalAmount: "89.99",
-    totalItems: 2,
-    status: "delivered",
-    paid: true,
-    paidAt: "2024-11-10T14:30:00.000Z",
-    createdAt: "2024-11-10T14:25:00.000Z",
-    items: [
-      {
-        id: "item-001",
-        quantity: 1,
-        price: "45.99",
-        product: {
-          id: "prod-001",
-          title: "Sudadera Tesla Gris"
-        }
-      },
-      {
-        id: "item-002",
-        quantity: 1,
-        price: "44.00",
-        product: {
-          id: "prod-002",
-          title: "Gorra Tesla Negra"
-        }
-      }
-    ]
-  },
-  {
-    id: "7d34205c-5hgb-625d-02hb-8128cffg514g",
-    totalAmount: "67.50",
-    totalItems: 1,
-    status: "cancelled",
-    paid: false,
-    paidAt: "2024-11-12T10:15:00.000Z",
-    createdAt: "2024-11-12T09:45:00.000Z",
-    items: [
-      {
-        id: "item-003",
-        quantity: 1,
-        price: "67.50",
-        product: {
-          id: "prod-003",
-          title: "Chaqueta Tesla Negra"
-        }
-      }
-    ]
-  }
-];
+import { useQuery } from "@tanstack/react-query";
+import { getOrdersAction } from "@/shop/actions/get-orders.action";
 
 const statusColors: Record<string, string> = {
   delivered: "bg-primary/10 text-primary border-primary/20",
@@ -132,18 +42,14 @@ const statusLabels: Record<string, string> = {
 
 export const ProfilePage = () => {
   const [openOrders, setOpenOrders] = useState<string[]>([]);
-  const [isLoadingOrders, setIsLoadingOrders] = useState(true);
 
   const user = useAuthStore((state) => state.user);
 
-  useEffect(() => {
-    // Simular carga de órdenes
-    const timer = setTimeout(() => {
-      setIsLoadingOrders(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
+  const { data, isLoading: isLoadingOrders } = useQuery({
+    queryKey: ["orders", user?.id],
+    queryFn: getOrdersAction,
+    enabled: !!user?.id
+  });
 
   const toggleOrder = (orderId: string) => {
     setOpenOrders((prev) =>
@@ -152,6 +58,9 @@ export const ProfilePage = () => {
         : [...prev, orderId]
     );
   };
+
+  const orders = data?.orders;
+  // const ordersCount = data?.totalOrders || 0;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -180,30 +89,29 @@ export const ProfilePage = () => {
               <CardTitle>Mis Pedidos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {isLoadingOrders ? (
-                // Loading Skeleton
-                <>
-                  {[1, 2, 3].map((i) => (
-                    <Card key={i} className="border-border">
-                      <div className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-5 w-32" />
-                            <Skeleton className="h-4 w-40" />
-                            <Skeleton className="h-4 w-24" />
-                          </div>
-                          <div className="space-y-2 text-right">
-                            <Skeleton className="h-6 w-24" />
-                            <Skeleton className="h-6 w-20" />
-                          </div>
+              {/* Loading Skeletons */}
+              <Activity mode={isLoadingOrders ? "visible" : "hidden"}>
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="border-border">
+                    <div className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-5 w-32" />
+                          <Skeleton className="h-4 w-40" />
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                        <div className="space-y-2 text-right">
+                          <Skeleton className="h-6 w-24" />
+                          <Skeleton className="h-6 w-20" />
                         </div>
                       </div>
-                    </Card>
-                  ))}
-                </>
-              ) : (
-                // Orders List
-                mockOrders.map((order) => (
+                    </div>
+                  </Card>
+                ))}
+              </Activity>
+              {/* Orders List */}
+              <Activity mode={!isLoadingOrders ? "visible" : "hidden"}>
+                {orders?.map((order) => (
                   <Collapsible
                     key={order.id}
                     open={openOrders.includes(order.id)}
@@ -211,7 +119,7 @@ export const ProfilePage = () => {
                   >
                     <Card className="border-border">
                       <CollapsibleTrigger className="w-full">
-                        <div className="flex items-center justify-between p-4 hover:bg-secondary/20 transition-colors">
+                        <div className="flex items-center justify-between p-4 hover:bg-secondary/20 transition-colors cursor-pointer">
                           <div className="space-y-1 text-left">
                             <div className="flex items-center gap-2">
                               <p className="font-semibold text-sm">
@@ -306,10 +214,18 @@ export const ProfilePage = () => {
                                   className="flex justify-between items-start"
                                 >
                                   <div className="flex-1">
-                                    <p className="font-medium text-sm">
-                                      {item.product.title}
-                                    </p>
-                                    <p className="text-sm text-muted-foreground">
+                                    <div>
+                                      <img
+                                        src={`${IMAGE_BASE_URL}${item.product.images[0].name}`}
+                                        alt={item.product.title}
+                                        className="h-12 w-12 rounded-lg inline ml-2 align-middle object-cover"
+                                        crossOrigin="anonymous"
+                                      />
+                                      <p className="font-medium text-sm inline ml-2 align-middle">
+                                        {item.product.title}
+                                      </p>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground ml-3 mt-1">
                                       Cantidad: {item.quantity}
                                     </p>
                                   </div>
@@ -337,8 +253,8 @@ export const ProfilePage = () => {
                       </CollapsibleContent>
                     </Card>
                   </Collapsible>
-                ))
-              )}
+                ))}
+              </Activity>
             </CardContent>
           </Card>
         </TabsContent>

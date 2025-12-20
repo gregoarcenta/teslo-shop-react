@@ -25,7 +25,9 @@ interface Product {
   id: string;
   title: string;
   slug: string;
-  images: unknown[];
+  images: {
+    name: string;
+  }[];
 }
 
 export type OrderStatus = "pending" | "delivered" | "cancelled";
