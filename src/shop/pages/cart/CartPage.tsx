@@ -5,17 +5,20 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import CustomCardItem from "@/shop/components/CustomCardItem";
 import { useCart } from "@/shop/hooks/useCart";
+import { useCheckout } from "@/shop/hooks/useCheckout";
 import { useDeleteFromCart } from "@/shop/hooks/useDeleteFromCart";
 import { useUpdateCart } from "@/shop/hooks/useUpdateCart";
 import { ShoppingBag } from "lucide-react";
 import { Activity } from "react";
 import { Link } from "react-router";
+import { toast } from "sonner";
 
 export const CartPage = () => {
   const { isLoading, data: cart, isError } = useCart();
   const { mutate: deleteFromCart, isPending: isDeletingFromCart } =
     useDeleteFromCart();
   const { mutate: updateQuantity, isPending: isUpdatingCart } = useUpdateCart();
+  const { mutate: checkout, isPending: isCheckingOut } = useCheckout();
 
   if (isLoading) {
     return (
@@ -87,6 +90,21 @@ export const CartPage = () => {
   const shipping = subtotal > 50 ? 0 : 5.99;
   const total = subtotal + shipping;
 
+  const handleCheckout = () => {
+    checkout(undefined, {
+      onSuccess: (url) => {
+        window.location.href = url;
+      },
+      onError: (err: Error) => {
+        const description = err?.message ?? "No se pudo iniciar el checkout";
+        toast.error("Error en el checkout", { description, richColors: true });
+      }
+    });
+  };
+
+  const isOperationLoading =
+    isCheckingOut || isDeletingFromCart || isUpdatingCart;
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-4xl font-bold mb-8 font-montserrat">
@@ -154,15 +172,15 @@ export const CartPage = () => {
               <Button
                 className="w-full mt-6 gradient-hero shadow-glow"
                 size="lg"
-                disabled={
-                  cartItems.length === 0 || isDeletingFromCart || isUpdatingCart
-                }
+                disabled={cartItems.length === 0 || isOperationLoading}
+                onClick={() => handleCheckout()}
               >
-                {isDeletingFromCart || isUpdatingCart ? (
+                <Activity mode={isOperationLoading ? "visible" : "hidden"}>
                   <span className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
-                ) : (
-                  "Proceder al Pago"
-                )}
+                </Activity>
+                <Activity mode={isOperationLoading ? "hidden" : "visible"}>
+                  Proceder al Pago
+                </Activity>
               </Button>
               <Button variant="outline" className="w-full mt-2" asChild>
                 <Link to="/products">Continuar Comprando</Link>

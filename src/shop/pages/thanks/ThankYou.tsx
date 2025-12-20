@@ -99,7 +99,7 @@ export const ThankYouPage = () => {
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link
-              to="/productos"
+              to="/products"
               className="flex items-center justify-center gap-2"
             >
               Seguir Comprando

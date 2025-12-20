@@ -19,6 +19,7 @@ import {
   AuthenticatedRoute,
   NotAuthenticatedRoute
 } from "./components/routes/ProtectedRoutes";
+import { PaymentSuccessRoute } from "./shop/routes/ProtectedRoutes";
 
 const AdminLayout = lazy(() => import("./admin/layout/AdminLayout"));
 
@@ -77,11 +78,11 @@ export const appRouter = createBrowserRouter([
         )
       },
       {
-        path: "thanks",
+        path: "payment-success",
         element: (
-          <AuthenticatedRoute>
+          <PaymentSuccessRoute>
             <ThankYouPage />
-          </AuthenticatedRoute>
+          </PaymentSuccessRoute>
         )
       },
       {

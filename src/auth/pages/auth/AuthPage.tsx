@@ -35,7 +35,7 @@ export const AuthPage = () => {
       queryClient.invalidateQueries({ queryKey: ["cart"] });
       navigate("/");
     },
-    onError: (_) =>
+    onError: () =>
       toast.error("Correo o contraseña incorrectos", {
         richColors: true,
         position: "bottom-center"
@@ -52,7 +52,7 @@ export const AuthPage = () => {
     },
     onError: (error: AxiosError<{ message: string[] }>) => {
       const data = error.response?.data;
-      let errorDetail = Array.isArray(data?.message)
+      const errorDetail = Array.isArray(data?.message)
         ? data.message[0]
         : data?.message;
 
