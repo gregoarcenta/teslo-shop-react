@@ -2,7 +2,6 @@ import { AdminTitle } from "@/admin/components/AdminTitle";
 import { Button } from "@/components/ui/button";
 import {
   Table,
-  TableCaption,
   TableHeader,
   TableRow,
   TableHead,
