@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useState, useEffect, useRef, Activity } from "react";
+import { useState, useRef, Activity } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,8 +29,147 @@ import { useAuthStore } from "@/auth/store/auth.store";
 import { useDebounce } from "use-debounce";
 import { useSearchProducts } from "../hooks/useSearchProducts";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ProductSuggestionResponse } from "@/types/product.interface";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
+
+interface SearchDropdownProps {
+  isSearchOpen: boolean;
+  isLoading: boolean;
+  suggestedProducts: ProductSuggestionResponse[];
+  selectedIndex: number;
+  searchQuery: string;
+  isMobile?: boolean;
+  handleProductSelect: (slug: string) => void;
+  handleSearch: () => void;
+  setIsMenuOpen?: (value: boolean) => void;
+}
+
+const SearchDropdown = ({
+  isSearchOpen,
+  isLoading,
+  suggestedProducts,
+  selectedIndex,
+  searchQuery,
+  isMobile = false,
+  handleProductSelect,
+  handleSearch,
+  setIsMenuOpen
+}: SearchDropdownProps) => {
+  if (!isSearchOpen) return null;
+
+  return (
+    <div className="absolute top-full mt-2 w-full bg-popover border border-border rounded-md shadow-lg z-50 max-h-[415px] overflow-y-auto">
+      <div className="p-2">
+        {/* Loading State */}
+        <Activity mode={isLoading ? "visible" : "hidden"}>
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-4 w-6 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-sm text-muted-foreground">
+              Buscando...
+            </span>
+          </div>
+        </Activity>
+
+        {/* Productos sugeridos */}
+        <Activity
+          mode={
+            !isLoading && suggestedProducts.length > 0 ? "visible" : "hidden"
+          }
+        >
+          <p className="text-xs font-medium text-muted-foreground px-2 py-1">
+            Sugerencias
+          </p>
+          <div className="space-y-1">
+            {suggestedProducts.map((product, index) => (
+              <button
+                key={product.id}
+                onClick={() => {
+                  handleProductSelect(product.slug);
+                  if (isMobile && setIsMenuOpen) setIsMenuOpen(false);
+                }}
+                className={`cursor-pointer w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
+                  index === selectedIndex
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted"
+                }`}
+              >
+                <img
+                  src={IMAGE_BASE_URL + product.image}
+                  alt={product.title}
+                  className="w-10 h-10 object-cover rounded"
+                  loading="lazy"
+                  crossOrigin="anonymous"
+                />
+                <div className="flex-1 min-w-0">
+                  <p
+                    className={`font-medium text-sm truncate ${
+                      index === selectedIndex
+                        ? "text-primary-foreground"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {product.title}
+                  </p>
+                  <p
+                    className={`text-sm truncate ${
+                      index === selectedIndex
+                        ? "text-primary-foreground/80"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    ${product.price}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="border-t border-border my-2"></div>
+        </Activity>
+
+        {/* Opción de búsqueda general */}
+        <button
+          onClick={() => {
+            handleSearch();
+            if (isMobile && setIsMenuOpen) setIsMenuOpen(false);
+          }}
+          className={`cursor-pointer w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
+            selectedIndex === suggestedProducts.length
+              ? "bg-primary text-primary-foreground"
+              : "hover:bg-muted"
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded flex items-center justify-center ${
+              selectedIndex === suggestedProducts.length
+                ? "bg-primary-foreground/20"
+                : "bg-muted"
+            }`}
+          >
+            <Search
+              className={`h-5 w-5 ${
+                selectedIndex === suggestedProducts.length
+                  ? "text-primary-foreground"
+                  : "text-muted-foreground"
+              }`}
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p
+              className={`font-medium text-sm ${
+                selectedIndex === suggestedProducts.length
+                  ? "text-primary-foreground"
+                  : "text-foreground"
+              }`}
+            >
+              Ver todos los resultados para "{searchQuery}"
+            </p>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 export const CustomHeader = () => {
   const location = useLocation();
@@ -47,6 +186,8 @@ export const CustomHeader = () => {
   const desktopSearchRef = useRef<HTMLInputElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
+  const prevFirstProductIdRef = useRef<string | null>(null);
+
   const [debouncedSearchQuery] = useDebounce(searchQuery, 300);
 
   const { data: suggestedProducts = [], isLoading } = useSearchProducts(
@@ -54,15 +195,18 @@ export const CustomHeader = () => {
     debouncedSearchQuery.trim().length > 1
   );
 
+  const currentFirstProductId = suggestedProducts[0]?.id ?? null;
+  if (prevFirstProductIdRef.current !== currentFirstProductId) {
+    prevFirstProductIdRef.current = currentFirstProductId;
+    if (selectedIndex !== 0) {
+      setSelectedIndex(0);
+    }
+  }
+
   const isActive = (path: string) => location.pathname === path;
   const isSearchOpen = searchQuery.trim().length > 1;
 
   const queryClient = useQueryClient();
-
-  // Reset selected index when products change
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [suggestedProducts]);
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
@@ -83,6 +227,10 @@ export const CustomHeader = () => {
     desktopSearchRef.current?.blur();
     mobileSearchRef.current?.blur();
     setIsMenuOpen(false);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
   };
 
   const handleProductSelect = (productSlug: string) => {
@@ -128,123 +276,6 @@ export const CustomHeader = () => {
     logout();
     queryClient.clear();
     navigate("/auth");
-  };
-
-  // Componente SearchDropdown
-  const SearchDropdown = ({ isMobile = false }: { isMobile?: boolean }) => {
-    if (!isSearchOpen) return null;
-
-    return (
-      <div className="absolute top-full mt-2 w-full bg-popover border border-border rounded-md shadow-lg z-50 max-h-[415px] overflow-y-auto">
-        <div className="p-2">
-          {/* Loading State */}
-          <Activity mode={isLoading ? "visible" : "hidden"}>
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-4 w-6 animate-spin text-muted-foreground" />
-              <span className="ml-2 text-sm text-muted-foreground">
-                Buscando...
-              </span>
-            </div>
-          </Activity>
-
-          {/* Productos sugeridos */}
-          <Activity
-            mode={
-              !isLoading && suggestedProducts.length > 0 ? "visible" : "hidden"
-            }
-          >
-            <p className="text-xs font-medium text-muted-foreground px-2 py-1">
-              Sugerencias
-            </p>
-            <div className="space-y-1">
-              {suggestedProducts.map((product, index) => (
-                <button
-                  key={product.id}
-                  onClick={() => {
-                    handleProductSelect(product.slug);
-                    if (isMobile) setIsMenuOpen(false);
-                  }}
-                  className={`cursor-pointer w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
-                    index === selectedIndex
-                      ? "bg-primary text-primary-foreground"
-                      : "hover:bg-muted"
-                  }`}
-                >
-                  <img
-                    src={IMAGE_BASE_URL + product.image}
-                    alt={product.title}
-                    className="w-10 h-10 object-cover rounded"
-                    loading="lazy"
-                    crossOrigin="anonymous"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`font-medium text-sm truncate ${
-                        index === selectedIndex
-                          ? "text-primary-foreground"
-                          : "text-foreground"
-                      }`}
-                    >
-                      {product.title}
-                    </p>
-                    <p
-                      className={`text-sm truncate ${
-                        index === selectedIndex
-                          ? "text-primary-foreground/80"
-                          : "text-muted-foreground"
-                      }`}
-                    >
-                      ${product.price}
-                    </p>
-                  </div>
-                </button>
-              ))}
-            </div>
-            <div className="border-t border-border my-2"></div>
-          </Activity>
-
-          {/* Opción de búsqueda general */}
-          <button
-            onClick={() => {
-              handleSearch();
-              if (isMobile) setIsMenuOpen(false);
-            }}
-            className={`cursor-pointer w-full flex items-center gap-3 p-2 rounded-md transition-colors text-left ${
-              selectedIndex === suggestedProducts.length
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted"
-            }`}
-          >
-            <div
-              className={`w-10 h-10 rounded flex items-center justify-center ${
-                selectedIndex === suggestedProducts.length
-                  ? "bg-primary-foreground/20"
-                  : "bg-muted"
-              }`}
-            >
-              <Search
-                className={`h-5 w-5 ${
-                  selectedIndex === suggestedProducts.length
-                    ? "text-primary-foreground"
-                    : "text-muted-foreground"
-                }`}
-              />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p
-                className={`font-medium text-sm ${
-                  selectedIndex === suggestedProducts.length
-                    ? "text-primary-foreground"
-                    : "text-foreground"
-                }`}
-              >
-                Ver todos los resultados para "{searchQuery}"
-              </p>
-            </div>
-          </button>
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -302,12 +333,20 @@ export const CustomHeader = () => {
                 ref={desktopSearchRef}
                 placeholder="Buscar productos..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 onKeyDown={handleKeyDown}
                 className="pl-10 bg-secondary/50 border-0"
               />
             </div>
-            <SearchDropdown />
+            <SearchDropdown
+              isSearchOpen={isSearchOpen}
+              isLoading={isLoading}
+              suggestedProducts={suggestedProducts}
+              selectedIndex={selectedIndex}
+              searchQuery={searchQuery}
+              handleProductSelect={handleProductSelect}
+              handleSearch={handleSearch}
+            />
           </div>
 
           {/* Actions */}
@@ -437,11 +476,21 @@ export const CustomHeader = () => {
                 ref={mobileSearchRef}
                 placeholder="Buscar productos..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={handleSearchChange}
                 onKeyDown={handleKeyDown}
                 className="pl-10 bg-secondary/50 border-0"
               />
-              <SearchDropdown isMobile />
+              <SearchDropdown
+                isSearchOpen={isSearchOpen}
+                isLoading={isLoading}
+                suggestedProducts={suggestedProducts}
+                selectedIndex={selectedIndex}
+                searchQuery={searchQuery}
+                isMobile
+                handleProductSelect={handleProductSelect}
+                handleSearch={handleSearch}
+                setIsMenuOpen={setIsMenuOpen}
+              />
             </div>
 
             {/* Mobile Navigation Links */}

@@ -1,7 +1,16 @@
 import React from "react";
 import { Search, Bell, MessageSquare, Settings } from "lucide-react";
+import { useProductFilters } from "@/shop/hooks/useProductFilters";
 
 const AdminHeader: React.FC = () => {
+  const { searchQuery, handleSearchChange } = useProductFilters();
+  const handleSearch = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const query = event.currentTarget.value;
+    if (event.key === "Enter") {
+      handleSearchChange(query);
+    }
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
@@ -13,8 +22,10 @@ const AdminHeader: React.FC = () => {
               size={20}
             />
             <input
-              type="text"
-              placeholder="Search..."
+              type="search"
+              defaultValue={searchQuery || ""}
+              placeholder="Buscar productos..."
+              onKeyDown={handleSearch}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
             />
           </div>
