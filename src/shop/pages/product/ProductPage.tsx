@@ -4,10 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Truck, Shield, RefreshCw, ChevronLeft } from "lucide-react";
 import { Link, Navigate, useParams } from "react-router";
-import { useQuery } from "@tanstack/react-query";
-import { getProductAction } from "@/shop/actions/get-product.action";
 import { AddToCartButton } from "@/shop/components/CustomBtnAddProduct";
 import { FavoriteButton } from "@/shop/components/CustomFavoriteButtom";
+import { useProduct } from "@/shop/hooks/useProduct";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -17,13 +16,7 @@ export const ProductPage = () => {
   const [selectedSize, setSelectedSize] = useState("");
   // const [quantity, setQuantity] = useState(1);
 
-  const { data: product, isLoading } = useQuery({
-    queryKey: ["product", idSlug],
-    queryFn: () => getProductAction(idSlug!),
-    staleTime: 1000 * 60 * 5,
-    enabled: !!idSlug,
-    retry: false
-  });
+  const { data: product, isLoading } = useProduct({ idSlug: idSlug! });
 
   if (isLoading) {
     return (
