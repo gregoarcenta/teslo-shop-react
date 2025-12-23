@@ -8,6 +8,9 @@ import { Plus, SaveAll, Tag, Upload, X } from "lucide-react";
 import { SIZE_OPTIONS } from "@/types/filters";
 import type { Size } from "@/types/enums";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { saveImageAction } from "@/admin/actions/save-image.action";
+import { deleteImageAction } from "@/admin/actions/delete-image.action";
 
 const IMAGE_BASE_URL = import.meta.env.VITE_IMAGE_BASE_URL;
 
@@ -27,6 +30,9 @@ export const ProductForm = ({
   onSubmit
 }: Props) => {
   const [dragActive, setDragActive] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const [deletingImage, setDeletingImage] = useState<string | null>(null);
+
   const inputTagRef = useRef<HTMLInputElement>(null);
 
   const defaultValuesProduct: Partial<Product> = product ?? {
@@ -58,6 +64,7 @@ export const ProductForm = ({
   const selectedSizes = useWatch({ control, name: "sizes" });
   const selectedTags = useWatch({ control, name: "tags" });
   const currentStock = useWatch({ control, name: "stock" });
+  const currentImages = useWatch({ control, name: "images" });
 
   const addTag = () => {
     const valueToAdd = inputTagRef.current!.value.trim().toLowerCase();
@@ -100,17 +107,99 @@ export const ProductForm = ({
     }
   };
 
-  const handleDrop = (e: React.DragEvent) => {
+  const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
     const files = e.dataTransfer.files;
-    console.log(files);
+
+    if (!files) return;
+
+    await uploadImages(files);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    console.log(files);
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = e.target.files;
+    if (!selectedFiles) return;
+
+    await uploadImages(selectedFiles);
+    e.target.value = "";
+  };
+
+  const handleDeleteImage = async (imageToDelete: string) => {
+    setDeletingImage(imageToDelete);
+
+    try {
+      await deleteImageAction(imageToDelete);
+
+      const updatedImages = getValues("images").filter(
+        (image) => image !== imageToDelete
+      );
+      setValue("images", updatedImages);
+
+      toast.success("Imagen eliminada correctamente", {
+        position: "top-right"
+      });
+    } catch (error) {
+      toast.error("Error al eliminar la imagen", {
+        position: "top-right"
+      });
+      console.error("Error deleting image:", error);
+    } finally {
+      setDeletingImage(null);
+    }
+  };
+
+  const uploadImages = async (files: FileList | File[]) => {
+    if (!files || files.length === 0) return;
+
+    setUploadingImages(true);
+
+    try {
+      const uploadPromises = Array.from(files).map((file) =>
+        saveImageAction(file)
+      );
+      const results = await Promise.allSettled(uploadPromises);
+
+      const successfulUploads: string[] = [];
+
+      results.forEach((result, index) => {
+        if (result.status === "fulfilled") {
+          console.log(result);
+
+          successfulUploads.push(result.value.public_id);
+        } else {
+          console.error(`Error uploading image ${index + 1}:`, result.reason);
+        }
+      });
+      if (successfulUploads.length > 0) {
+        const currentImages = getValues("images") || [];
+        setValue("images", [...currentImages, ...successfulUploads]);
+
+        toast.success(
+          `${successfulUploads.length} imagen(es) subida(s) correctamente`,
+          {
+            position: "top-right"
+          }
+        );
+      }
+
+      if (results.some((r) => r.status === "rejected")) {
+        const failedCount = results.filter(
+          (r) => r.status === "rejected"
+        ).length;
+        toast.error(`${failedCount} imagen(es) no se pudieron subir`, {
+          position: "top-right"
+        });
+      }
+    } catch (error) {
+      toast.error("Error al subir las imágenes", {
+        position: "top-right"
+      });
+      console.error("Error uploading images:", error);
+    } finally {
+      setUploadingImages(false);
+    }
   };
 
   return (
@@ -119,14 +208,18 @@ export const ProductForm = ({
       <div className="flex justify-between items-center">
         <AdminTitle title={title} subtitle={subtitle} />
         <div className="flex justify-end gap-4">
-          <Button variant="outline" type="button" disabled={isLoadingSubmit}>
+          <Button
+            variant="outline"
+            type="button"
+            disabled={isLoadingSubmit || uploadingImages}
+          >
             <Link to="/admin/products" className="flex items-center gap-2">
               <X className="w-4 h-4" />
               Cancelar
             </Link>
           </Button>
 
-          <Button disabled={isLoadingSubmit} type="submit">
+          <Button disabled={isLoadingSubmit || uploadingImages} type="submit">
             <SaveAll className="w-4 h-4" />
             Guardar cambios
           </Button>
@@ -476,7 +569,7 @@ export const ProductForm = ({
                   dragActive
                     ? "border-blue-400 bg-blue-50"
                     : "border-slate-300 hover:border-slate-400"
-                }`}
+                } ${uploadingImages ? "opacity-50 cursor-not-allowed" : ""}`}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}
                 onDragOver={handleDrag}
@@ -486,6 +579,7 @@ export const ProductForm = ({
                   type="file"
                   multiple
                   accept="image/*"
+                  disabled={uploadingImages}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   onChange={handleFileChange}
                 />
@@ -493,7 +587,9 @@ export const ProductForm = ({
                   <Upload className="mx-auto h-12 w-12 text-slate-400" />
                   <div>
                     <p className="text-lg font-medium text-slate-700">
-                      Arrastra las imágenes aquí
+                      {uploadingImages
+                        ? "Subiendo imágenes..."
+                        : "Arrastra las imágenes aquí"}
                     </p>
                     <p className="text-sm text-slate-500">
                       o haz clic para buscar
@@ -511,7 +607,7 @@ export const ProductForm = ({
                   Imágenes actuales
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  {product?.images.map((image, index) => (
+                  {currentImages.map((image, index) => (
                     <div key={index} className="relative group">
                       <div className="aspect-square bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center">
                         <img
@@ -523,7 +619,9 @@ export const ProductForm = ({
                       </div>
                       <button
                         type="button"
-                        className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        onClick={() => handleDeleteImage(image)}
+                        disabled={deletingImage === image}
+                        className="absolute cursor-pointer top-2 right-2 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200 disabled:opacity-50"
                       >
                         <X className="h-3 w-3" />
                       </button>
