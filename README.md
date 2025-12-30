@@ -1,73 +1,70 @@
-# React + TypeScript + Vite
+# Teslo Shop - Modern E-Commerce Client
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Plataforma de comercio electrónico moderna desarrollada con React 19 y las últimas tecnologías del ecosistema. Proyecto full-stack que demuestra el manejo de autenticación, gestión de estado complejo, y arquitectura escalable para aplicaciones de producción.
 
-Currently, two official plugins are available:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+### 🚀 Tecnologías Principales
 
-## React Compiler
+*   **Framework:** [React 19](https://react.dev/)
+*   **Herramienta de Construcción:** [Vite](https://vitejs.dev/) + [Rolldown](https://rolldown.rs/)
+*   **Lenguaje:** [TypeScript](https://www.typescriptlang.org/)
+*   **Gestión de Estado:** [Zustand](https://github.com/pmndrs/zustand)
+*   **Manejo de Datos y Caché:** [TanStack Query v5](https://tanstack.com/query/latest)
+*   **Estilos:** [Tailwind CSS v4](https://tailwindcss.com/)
+*   **Componentes UI:** [Shadcn/UI](https://ui.shadcn.com/) (Radix UI)
+*   **Formularios:** [React Hook Form](https://react-hook-form.com/)
+*   **Enrutamiento:** [React Router 7](https://reactrouter.com/)
 
-The React Compiler is currently not compatible with SWC. See [this issue](https://github.com/vitejs/vite-plugin-react/issues/428) for tracking the progress.
+### ✨ Características
 
-## Expanding the ESLint configuration
+*   **Autenticación Completa:** Flujos de login, registro y protección de rutas.
+*   **Gestión de Catálogo:** Visualización de productos por categorías, tallas y filtros.
+*   **Carrito de Compras:** Persistencia de productos y gestión de cantidades.
+*   **Panel de Administración:** Gestión integral de productos e inventario.
+*   **Diseño Adaptable:** Interfaz totalmente responsiva y optimizada para dispositivos móviles.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 🛠️ Configuración Local
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone https://github.com/gregoarcenta/teslo-shop-react.git
+    cd teslo-shop-react
+    ```
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+2.  **Instalar dependencias:**
+    ```bash
+    npm install
+    ```
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+3.  **Variables de entorno:**
+    Crea un archivo `.env` en la raíz del proyecto y configura la URL de la API:
+    ```env
+    VITE_API_URL=http://localhost:3000/api
+    ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+4.  **Ejecutar en desarrollo:**
+    ```bash
+    npm run dev
+    ```
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 🐳 Despliegue con Docker
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+El proyecto incluye soporte para Docker mediante Nginx para servir la aplicación estática:
+
+1.  **Construir la imagen:**
+    ```bash
+    docker build -t teslo-shop-client .
+    ```
+
+2.  **Ejecutar contenedor:**
+    ```bash
+    docker run -p 80:80 teslo-shop-client
+    ```
+
+## 🔗 Links
+- **Demo en vivo:** [react.tesloshop.arcentales.dev](https://react.tesloshop.arcentales.dev/)
+- **API Repository:** [github.com/gregoarcenta/teslo-shop-backend](https://github.com/gregoarcenta/teslo-shop-backend)
+- **Portafolio:** [arcentales.dev](https://arcentales.dev)
+
+---
+Desarrollado como parte de mi portafolio profesional.
