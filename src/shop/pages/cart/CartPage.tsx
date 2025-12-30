@@ -142,7 +142,7 @@ export const CartPage = () => {
           </div>
 
           {/* Order Summary */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-1 space-y-4">
             <Card className="p-6 sticky top-24">
               <h2 className="text-xl font-semibold mb-4">Resumen del Pedido</h2>
               <div className="space-y-3">
@@ -185,6 +185,34 @@ export const CartPage = () => {
               <Button variant="outline" className="w-full mt-2" asChild>
                 <Link to="/products">Continuar Comprando</Link>
               </Button>
+            </Card>
+            {/* Test Card Info */}
+            <Card className="p-4 border-dashed border-2 border-primary/30 bg-primary/5">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-sm text-primary mb-1">
+                    Datos de Prueba
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Este es un proyecto de demostración. Usa estos datos de
+                    prueba para simular una compra:
+                  </p>
+                  <div className="space-y-2 text-xs font-mono bg-card p-3 rounded-lg border border-border">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Tarjeta:</span>
+                      <span className="font-semibold">4242 4242 4242 4242</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Fecha:</span>
+                      <span className="font-semibold">12/34</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">CVC:</span>
+                      <span className="font-semibold">123</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </Card>
           </div>
         </div>
